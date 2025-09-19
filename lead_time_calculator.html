@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procurement Lead Time Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .calculator-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease-in-out;
+        }
+        /* Custom styles for brand colors */
+        .btn-brand {
+            background-color: #a1805b; /* Dashiell Mustard Gold */
+            color: white;
+        }
+        .btn-brand:hover {
+            background-color: #8f7150; /* Darker shade for hover */
+        }
+        .text-brand {
+            color: #a1805b;
+        }
+         .focus-brand:focus {
+            --tw-ring-color: #a1805b;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <div class="flex items-center justify-center mb-8 gap-6 text-left">
+            <!-- Logo embedded as Base64 to keep it in a single file -->
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARgAAAD8CAMAAADw+8scAAAAQlBMVEX///8AAADR0dGenp7m5ubf39/V1dXj4+Pb29vY2NjMzMzDw8N+fn5xcXGtra2pqamioqKampqbm5uUlJSUlJSGhoZCQkLh8y3sAAAAAXRSTlMAQObYZgAAA5FJREFUeNrt3dFu2zAQhlEAw0zuz///lE3aNJu2UkoUSLGe7bjJkC/stJIs2/U6AAAAAAAAAAAAAAAAAAAAAAAAAADYfsx/wT/Mv+Kf8y/4p/1L/jn/Xv+c/5N/xL/vX/PP+ff8I/5t/zT/hH/TP+Vf8I/5F/xT/qX/HP+rf8c/59/wj/l3/DP+If8M/4R/xz/hH/LP+Gf8G/4Z/4h/wj/in/BP+Kf8I/4p/5J/wD/jn/DP+Gf8G/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/5J/wD/hn/DP+Gf8M/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/5J/wD/hn/DP+Gf8M/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/5J/wD/hn/DP+Gf8M/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/5J/wD/hn/DP+Gf8M/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/5J/wD/hn/DP+Gf8M/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/5J/wD/hn/DP+Gf8M/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/5J/wD/hn/DP+Gf8M/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/5J/wD/hn/DP+Gf8M/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/wD/g/wHw02Z29e4QigAAAABJRU5ErkJggg==" alt="Dashiell Corp Logo" class="h-20 w-auto">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Procurement Lead Time Calculator</h1>
+                <p class="text-gray-600 mt-1">Select a material to calculate order and delivery dates.</p>
+            </div>
+        </div>
+
+        <div class="calculator-card mb-8">
+            <label for="material-select" class="block text-sm font-medium text-gray-700 mb-2">Select Material</label>
+            <select id="material-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand focus:border-indigo-500">
+                <!-- Material options will be populated by JavaScript -->
+            </select>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Calculator 1: Find Delivery Date -->
+            <div class="calculator-card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">1. Calculate Delivery Date</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="order-date" class="block text-sm font-medium text-gray-700">If I order on...</label>
+                        <input type="date" id="order-date" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand focus:border-indigo-500">
+                    </div>
+                    <button id="calculate-delivery-btn" class="w-full btn-brand font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">
+                        Calculate Estimated Delivery
+                    </button>
+                    <div>
+                        <p class="text-sm text-gray-600">Estimated Delivery Date:</p>
+                        <p id="delivery-date-result" class="text-lg font-bold text-brand h-8 flex items-center"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calculator 2: Find Order-By Date -->
+            <div class="calculator-card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">2. Calculate "Order By" Date</h2>
+                 <div class="space-y-4">
+                    <div>
+                        <label for="delivery-date" class="block text-sm font-medium text-gray-700">I need it delivered by...</label>
+                        <input type="date" id="delivery-date" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand focus:border-indigo-500">
+                    </div>
+                    <button id="calculate-order-by-btn" class="w-full bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition">
+                        Calculate "Order By" Deadline
+                    </button>
+                    <div>
+                        <p class="text-sm text-gray-600">You need to order by:</p>
+                        <p id="order-by-date-result" class="text-lg font-bold text-gray-700 h-8 flex items-center"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="text-center text-gray-500 text-sm mt-8">
+            &copy; 2025 Dashiell Corp.
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Data from your tblMatLeadTime.sql file
+            const leadTimeData = [
+                { name: 'Irby', weeks: 8 },
+                { name: 'Battery', weeks: 24 },
+                { name: 'Battery Cabinet', weeks: 23 },
+                { name: 'Battery Charger', weeks: 27 },
+                { name: 'Battery Monitor', weeks: 19 },
+                { name: 'Cap Switcher', weeks: 74 },
+                { name: 'Circuit Switcher', weeks: 74 },
+                { name: 'CCVT', weeks: 36 },
+                { name: 'Free-standing CT', weeks: 47 },
+                { name: 'PT', weeks: 71 },
+                { name: 'Slip Over CT', weeks: 32 },
+                { name: 'SSVT', weeks: 101 },
+                { name: 'Linear Coupler', weeks: 32 },
+                { name: 'Dx Circuit Breaker', weeks: 55 },
+                { name: 'Recloser (Substation)', weeks: 42 },
+                { name: 'Cable Trench', weeks: 24 },
+                { name: 'Firewall', weeks: 24 },
+                { name: 'Oil Containment', weeks: 14 },
+                { name: 'Line Tuner', weeks: 42 },
+                { name: 'Wave Trap', weeks: 34 },
+                { name: 'DFR', weeks: 29 },
+                { name: 'Relay Panel', weeks: 39 },
+                { name: 'RTU', weeks: 31 },
+                { name: 'Disconnect Switch', weeks: 50 },
+                { name: 'Motor Operator', weeks: 36 },
+                { name: 'Gas Insulated Line', weeks: 149 },
+                { name: 'Gas Insulated Swgr.', weeks: 149 },
+                { name: 'Reactors Shunt', weeks: 248 },
+                { name: 'Transformer (30 MVA and Below)', weeks: 216 },
+                { name: 'Transformer (Above 30 MVA)', weeks: 228 },
+                { name: 'Transformer Monitor', weeks: 31 },
+                { name: 'Voltage Regulator', weeks: 80 },
+                { name: 'Switchgear', weeks: 124 },
+                { name: 'Structural Steel', weeks: 49 },
+                { name: 'Capacitor Bank', weeks: 87 },
+                { name: 'Reactor (Air Core)', weeks: 52 },
+                { name: 'Skid - Mounted Substation', weeks: 216 },
+                { name: 'Package Control Enclosure / Control Building', weeks: 69 },
+                { name: 'Circuit Breaker - 72kv 40kA', weeks: 98 },
+                { name: 'Circuit Breaker - 145kv 40kA', weeks: 100 },
+                { name: 'Circuit Breaker - 72kv/145kv 63kA', weeks: 150 },
+                { name: 'Circuit Breaker - 245kv 63kA', weeks: 150 },
+                { name: 'Circuit Breaker - 362kv', weeks: 190 },
+                { name: 'Circuit Breaker - 550kv', weeks: 194 }
+            ];
+
+            const materialSelect = document.getElementById('material-select');
+
+            // Populate dropdown
+            leadTimeData.sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
+            leadTimeData.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.weeks;
+                option.textContent = `${item.name} (${item.weeks} weeks)`;
+                materialSelect.appendChild(option);
+            });
+            
+            // Helper function to format dates
+            const formatDate = (date) => {
+                 if (!date || isNaN(date)) return 'Invalid Date';
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    timeZone: 'UTC' // Use UTC to avoid timezone off-by-one errors
+                });
+            };
+
+            // --- Calculator 1: Delivery Date ---
+            const calculateDeliveryBtn = document.getElementById('calculate-delivery-btn');
+            const orderDateInput = document.getElementById('order-date');
+            const deliveryDateResult = document.getElementById('delivery-date-result');
+
+            calculateDeliveryBtn.addEventListener('click', () => {
+                const leadTimeWeeks = parseInt(materialSelect.value, 10);
+                const orderDateStr = orderDateInput.value;
+
+                if (!orderDateStr) {
+                    deliveryDateResult.textContent = 'Please select an order date.';
+                    deliveryDateResult.classList.add('text-red-500');
+                    return;
+                }
+                
+                deliveryDateResult.classList.remove('text-red-500');
+                const orderDate = new Date(orderDateStr + 'T00:00:00Z'); // Treat date as UTC
+                const leadTimeDays = leadTimeWeeks * 7;
+                
+                const deliveryDate = new Date(orderDate.getTime());
+                deliveryDate.setDate(deliveryDate.getDate() + leadTimeDays);
+
+                deliveryDateResult.textContent = formatDate(deliveryDate);
+            });
+
+
+            // --- Calculator 2: Order-By Date ---
+            const calculateOrderByBtn = document.getElementById('calculate-order-by-btn');
+            const deliveryDateInput = document.getElementById('delivery-date');
+            const orderByDateResult = document.getElementById('order-by-date-result');
+
+            calculateOrderByBtn.addEventListener('click', () => {
+                const leadTimeWeeks = parseInt(materialSelect.value, 10);
+                const deliveryDateStr = deliveryDateInput.value;
+
+                if (!deliveryDateStr) {
+                    orderByDateResult.textContent = 'Please select a delivery date.';
+                    orderByDateResult.classList.add('text-red-500');
+                    return;
+                }
+                
+                orderByDateResult.classList.remove('text-red-500');
+                const deliveryDate = new Date(deliveryDateStr + 'T00:00:00Z'); // Treat date as UTC
+                const leadTimeDays = leadTimeWeeks * 7;
+                
+                const orderByDate = new Date(deliveryDate.getTime());
+                orderByDate.setDate(orderByDate.getDate() - leadTimeDays);
+
+                orderByDateResult.textContent = formatDate(orderByDate);
+            });
+        });
+    </script>
+</body>
+</html>
+
