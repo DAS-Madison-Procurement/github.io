@@ -212,5 +212,12 @@
                 const leadTimeDays = leadTimeWeeks * 7;
                 
                 const orderByDate = new Date(deliveryDate.getTime());
-                orderByDate.setDate(orderByDate.getDate() - lead.
+                orderByDate.setDate(orderByDate.getDate() - leadTimeDays);
+
+                orderByDateResult.textContent = formatDate(orderByDate);
+            });
+        });
+    </script>
+</body>
+</html>
 
