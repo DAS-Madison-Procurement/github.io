@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Procurement Lead Time Calculator</title>
+    <title>FirstEnergy Procurement Lead Time Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -38,9 +38,9 @@
     <div class="w-full max-w-4xl">
         <div class="flex items-center justify-center mb-8 gap-6 text-left">
             <!-- Corrected Base64 string for the logo -->
-            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARgAAAD8CAMAAADw+8scAAAAQlBMVEX///8AAADR0dGenp7m5ubf39/V1dXj4+Pb29vY2NjMzMzDw8N+fn5xcXGtra2pqamioqKampqbm5uUlJSUlJSGhoZCQkLh8y3sAAAAAXRSTlMAQObYZgAAA5FJREFUeNrt3dFu2zAQhlEAw0zuz///lE3aNJu2UkoUSLGe7bjJkC/stJIs2/U6AAAAAAAAAAAAAAAAAAAAAAAAAADYfsx/wT/Mv+Kf8y/4p/1L/jn/Xv+c/5N/xL/vX/PP+ff8I/5t/zT/hH/TP+Vf8I/5F/xT/qX/HP+rf8c/59/wj/l3/DP+If8M/4R/xz/hH/LP+Gf8G/4Z/4h/wj/in/BP+Kf8I/4p/5J/wD/jn/DP+Gf8G/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/5J/wD/hn/DP+Gf8M/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/5J/wD/hn/DP+Gf8M/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/5J/wD/hn/DP+Gf8M/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/5J/wD/hn/DP+Gf8M/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/5J/wD/hn/DP+Gf8M/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/5J/wD/hn/DP+Gf8M/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/5J/wD/hn/DP+Gf8M/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/5J/wD/hn/DP+Gf8M/4Z/wx/wz/hn/DP+Kf8U/4p/zT/hH/NP+Gf80/4J/xD/gn/kH/CP+Sf8I/5J/wj/in/BP+Ef8M/4Z/xD/hn/DP+Gf8M/4R/yz/hn/DP+Gf8M/5p/wT/mn/BP+Kf8E/4J/wD/g/wHw02Z29e4QigAAAABJRU5ErkJggg==" alt="Dashiell Corp Logo" class="h-20 w-auto">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAASFBMVEX///8AAADR0dGenp7m5ubf39/V1dXj4+Pb29vY2NjMzMzDw8N+fn5xcXGtra2pqamioqKampqbm5uUlJSUlJSGhoZCQkKl5dKTAAAClUlEQVR4nO3d63aqMBRAYRRgElSkYr//7z1JQ2pxsAokd7uT7+lMmjxAljQhAAAAAAAAAAAAAAAAAAAAAAAAAABg/7D18fH0y+u7N2/fvr20XMW33/5v2b4eS93Y//39j2/fl89+e9b81/aBf/w/3J+fT1/f3//8/v39/bX9a/8D//y/sX+f//1+v9/vN/v9fg/A9/1+v/f7/d7vf/+/8/v9/i/A9/1+v/f7/d7v9/v9/oCv+n2/3+P3+z2/3+P3+z2/3+P3+z2/3+/3+/0+/gDX+/1+v/f7/R6A7/v9/s/v9/v9XoDve3w/v9/j9/s9v9/j9/s9v9/j9/s9P9/j9/s9P9/v9/v9PoBr/X6/3+/3e3y/3+/3e3y/3+/3e3y/3+/3e3y/3+/3+/0ege/7/X6/3+8F+L7f7/f7/X6/3+/3+/0ege/7/R6A7/v9fo/f7/f4/X6/3+/3+/0+/gDX+/1+v/f7/R6A7/v9fs/v9/v9XoDve3w/v9/j9/s9v9/j9/s9v9/j9/s9P9/j9/s9P9/v9/v9PoBr/X6/3+/3e3y/3+/3e3y/3+/3e3y/3+/3e3y/3+/3+/0ege/7/X6/3+8F+L7f7/f7/X6/3+/3+/0ege/7/R6A7/v9fo/f7/f4/X6/3+/3+/0+/gDX+/1+v/f7/R6A7/v9fs/v9/v9XoDve3w/v9/j9/s9v9/j9/s9v9/j9/s9P9/j9/s9P9/v9/v9PoBr/X6/3+/3e3y/3+/3e3y/3+/3e3y/3+/3e3y/3+/3+/0ege/7/X6/3+8F+L7f7/f7/X6/3+/3+/0ege/7/R6A7/v9fo/f7/f4/X6/3+/3+/0+/gDX+/1+v/f7/R6A7/v9fs/v9/v9XoDve3w/v9/j9/s9v9/j9/s9v9/j9/s9P9/j9/s9P9/v9/v9PoBr/X6/3+/3e3y/3+/3e3y/3+/3e3y/3+/3e3y/3+/3+/0ege/7/X6/3+8F+L7f7/f7/X6/3+/3+/0ege/7/R6A7/v9fo/f7/f4/X6/3+/3+/0+/gDX+/1+v/f7/R6A7/v9fs/v9/v9XoDve3w/v9/j9/s9v9/j9/s9v9/j9/s9P9/j9/s9P9/v9/v9PoBr/X6/3+/3e3y/3+/3e3y/3+/3e3y/3+/3e3y/3+/3+/0ege/7/X6/3+8F+L7f7/f7/X6/3+/3+/0ege/7/R6A7/v9fo/f7/f4/X6/3+/3+/0+/gDX+/1+v/f7/R6A7/v9fs/v9/v9XoDve3w/v9/j9/s9v9/j9/s9v9/j9/s9P9/j9/s9P9/v9/v9PoBr/X6/3+/3e3y/3+/3e3y/3+/3e3y/3+/3e3y/3+/3+/0ege/7/X6/3+/3e3y/3+/3e3y/3+/3+/1+v98L8H2/3+/3+/0+v9/v9/v9fg/A9/1+v/f7/d7v9/v9/oCv+n2/3+P3+z2/3+P3+z2/3+P3+z2/3+/3+/0+/gDX+/1+v/f7/d7v9/v9/oCv+n2/3+P3+z2/3+P3+z2/3+/3+/0+/gDX+/1+v/f7/d7v9/v9/oCv+n0/3+P3+z2/3+/3+/0ege/7/R6A7/v9XoDve7/f7/f6/R6AAAAAAAAAAAAAAAAAAAAAAAAAAAD4D/8DAxXkU1QSAAAAAElFTkSuQmCC" alt="Dashiell Corp Logo" class="h-20 w-auto">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800">Procurement Lead Time Calculator</h1>
+                <h1 class="text-3xl font-bold text-gray-800">FirstEnergy Procurement Lead Time Calculator</h1>
                 <p class="text-gray-600 mt-1">Select a material to calculate order and delivery dates.</p>
             </div>
         </div>
@@ -212,12 +212,5 @@
                 const leadTimeDays = leadTimeWeeks * 7;
                 
                 const orderByDate = new Date(deliveryDate.getTime());
-                orderByDate.setDate(orderByDate.getDate() - leadTimeDays);
-
-                orderByDateResult.textContent = formatDate(orderByDate);
-            });
-        });
-    </script>
-</body>
-</html>
+                orderByDate.setDate(orderByDate.getDate() - lead.
 
