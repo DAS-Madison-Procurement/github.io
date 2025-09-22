@@ -81,24 +81,6 @@
         <div id="results-container" class="calculator-card mt-8" style="display: none;">
             <!-- Milestone results will be injected here -->
         </div>
-
-        <!-- Custom Milestone Calculator -->
-        <div class="calculator-card mt-8">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Add a Custom Milestone</h2>
-            <div class="space-y-4">
-                <div>
-                    <label for="custom-milestone-desc" class="block text-sm font-medium text-gray-700">Milestone Description</label>
-                    <input type="text" id="custom-milestone-desc" placeholder="e.g., Client kick-off meeting" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
-                </div>
-                <div>
-                    <label for="custom-milestone-weeks" class="block text-sm font-medium text-gray-700">Weeks Before Delivery</label>
-                    <input type="number" id="custom-milestone-weeks" placeholder="e.g., 12" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
-                </div>
-                <button id="add-custom-btn" class="w-full bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition">
-                    Add to List
-                </button>
-            </div>
-        </div>
         
         <footer class="text-center mt-8">
             <a href="index.html" class="text-gray-600 hover:text-brand font-medium transition">
@@ -126,11 +108,6 @@
             const resultsContainer = document.getElementById('results-container');
             const lastUpdatedElement = document.getElementById('last-updated');
             const ifmLinkContainer = document.getElementById('ifm-link-container');
-            
-            // Custom milestone elements
-            const customMilestoneDesc = document.getElementById('custom-milestone-desc');
-            const customMilestoneWeeks = document.getElementById('custom-milestone-weeks');
-            const addCustomBtn = document.getElementById('add-custom-btn');
 
             // Modal elements
             const errorModal = document.getElementById('error-modal');
@@ -282,39 +259,6 @@
                 resultsContainer.style.display = 'block';
             }
 
-            function addCustomMilestone() {
-                const deliveryDateStr = deliveryDateInput.value;
-                if (!deliveryDateStr) {
-                    showDateErrorModal();
-                    return;
-                }
-
-                const description = customMilestoneDesc.value.trim();
-                const weeks = parseInt(customMilestoneWeeks.value, 10);
-
-                if (!description || isNaN(weeks) || weeks <= 0) {
-                    // Simple validation feedback
-                    customMilestoneDesc.classList.toggle('border-red-500', !description);
-                    customMilestoneWeeks.classList.toggle('border-red-500', isNaN(weeks) || weeks <= 0);
-                    return;
-                }
-                
-                // Remove validation feedback on success
-                customMilestoneDesc.classList.remove('border-red-500');
-                customMilestoneWeeks.classList.remove('border-red-500');
-
-                const deliveryDate = new Date(deliveryDateStr + 'T00:00:00Z');
-                const deadline = new Date(deliveryDate.getTime());
-                deadline.setDate(deadline.getDate() - (weeks * 7));
-                
-                appendResult(description, deadline);
-                resultsContainer.style.display = 'block';
-
-                // Clear inputs for next entry
-                customMilestoneDesc.value = '';
-                customMilestoneWeeks.value = '';
-            }
-
             function appendResult(description, date) {
                 const resultItem = document.createElement('div');
                 resultItem.className = 'result-item flex justify-between items-center';
@@ -334,7 +278,6 @@
             
             materialSelect.addEventListener('change', updateIfmLink);
             calculateBtn.addEventListener('click', calculateAndDisplayMilestones);
-            addCustomBtn.addEventListener('click', addCustomMilestone);
             populateMaterials();
         });
     </script>
