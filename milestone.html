@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Issue for Milestone (IFM) Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .calculator-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease-in-out;
+        }
+        .btn-brand {
+            background-color: #a1805b; /* Dashiell Mustard Gold */
+            color: white;
+        }
+        .btn-brand:hover {
+            background-color: #8f7150;
+        }
+        .text-brand {
+            color: #a1805b;
+        }
+        .focus-brand:focus {
+            --tw-ring-color: #a1805b;
+        }
+        #results-container .result-item {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 0;
+        }
+        #results-container .result-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+         #results-container .result-item:first-child {
+            padding-top: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-2xl">
+        <div class="flex items-center justify-center mb-8 gap-6 text-left">
+            <img src="logo.png" alt="Dashiell Corp Logo" class="h-20 w-auto">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Issue for Milestone (IFM) Calculator</h1>
+                <p class="text-gray-600 mt-1">Select a material and delivery date to see milestone deadlines.</p>
+            </div>
+        </div>
+
+        <div class="calculator-card space-y-6">
+            <div>
+                <label for="material-select" class="block text-sm font-medium text-gray-700">Select Material Category</label>
+                <select id="material-select" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                    <option>Loading materials...</option>
+                </select>
+            </div>
+            <div>
+                <label for="delivery-date" class="block text-sm font-medium text-gray-700">Final Delivery Date</label>
+                <input type="date" id="delivery-date" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+            </div>
+            <button id="calculate-btn" class="w-full btn-brand font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">
+                Calculate Milestone Deadlines
+            </button>
+        </div>
+
+        <div id="results-container" class="calculator-card mt-8" style="display: none;">
+            <!-- Milestone results will be injected here -->
+        </div>
+        
+        <footer class="text-center mt-8">
+            <a href="index.html" class="text-gray-600 hover:text-brand font-medium transition">
+                &larr; Back to Lead Time Calculator
+            </a>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // !!! IMPORTANT !!!
+            // PASTE THE "PUBLISH TO WEB" CSV LINK FOR YOUR NEW GOOGLE SHEET HERE
+            const googleSheetUrl = 'PASTE_YOUR_IFM_GOOGLE_SHEET_LINK_HERE';
+
+            const materialSelect = document.getElementById('material-select');
+            const deliveryDateInput = document.getElementById('delivery-date');
+            const calculateBtn = document.getElementById('calculate-btn');
+            const resultsContainer = document.getElementById('results-container');
+            
+            let milestoneData = {};
+
+            const formatDate = (date) => {
+                if (!date || isNaN(date)) return 'Invalid Date';
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    timeZone: 'UTC'
+                });
+            };
+
+            async function populateMaterials() {
+                materialSelect.disabled = true;
+                try {
+                    if (googleSheetUrl === 'PASTE_YOUR_IFM_GOOGLE_SHEET_LINK_HERE') {
+                        throw new Error('Google Sheet URL has not been set in the script.');
+                    }
+                    const response = await fetch(googleSheetUrl);
+                    if (!response.ok) throw new Error('Could not fetch data from Google Sheet.');
+                    
+                    const csvText = await response.text();
+                    const rows = csvText.trim().split('\n').slice(1).filter(row => row);
+
+                    milestoneData = {}; // Clear previous data
+
+                    rows.forEach(row => {
+                        const columns = row.split(',');
+                        const material = (columns[0] || '').trim().replace(/"/g, '');
+                        const milestone = (columns[1] || '').trim().replace(/"/g, '');
+                        const weeks = parseInt((columns[2] || '').trim(), 10);
+
+                        if (material && milestone && !isNaN(weeks)) {
+                            if (!milestoneData[material]) {
+                                milestoneData[material] = [];
+                            }
+                            milestoneData[material].push({ milestone, weeks });
+                        }
+                    });
+
+                    const materials = Object.keys(milestoneData).sort();
+                    if (materials.length === 0) throw new Error('No valid material data found in the sheet.');
+
+                    materialSelect.innerHTML = ''; // Clear loading message
+                    materials.forEach(material => {
+                        const option = document.createElement('option');
+                        option.value = material;
+                        option.textContent = material;
+                        materialSelect.appendChild(option);
+                    });
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    materialSelect.innerHTML = `<option>Error: ${error.message}</option>`;
+                } finally {
+                    materialSelect.disabled = false;
+                }
+            }
+
+            function calculateAndDisplayMilestones() {
+                const selectedMaterial = materialSelect.value;
+                const deliveryDateStr = deliveryDateInput.value;
+
+                if (!deliveryDateStr) {
+                    alert('Please select a final delivery date.');
+                    return;
+                }
+                
+                resultsContainer.innerHTML = '';
+                const milestones = milestoneData[selectedMaterial];
+                if (!milestones) return;
+                
+                const deliveryDate = new Date(deliveryDateStr + 'T00:00:00Z');
+                
+                // Sort milestones by weeks descending (earliest deadline first)
+                milestones.sort((a, b) => b.weeks - a.weeks);
+
+                milestones.forEach(item => {
+                    const deadline = new Date(deliveryDate.getTime());
+                    deadline.setDate(deadline.getDate() - (item.weeks * 7));
+
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'result-item flex justify-between items-center';
+                    
+                    const milestoneText = document.createElement('p');
+                    milestoneText.className = 'text-gray-700';
+                    milestoneText.textContent = item.milestone;
+
+                    const milestoneDate = document.createElement('p');
+                    milestoneDate.className = 'text-lg font-bold text-brand';
+                    milestoneDate.textContent = formatDate(deadline);
+
+                    resultItem.appendChild(milestoneText);
+                    resultItem.appendChild(milestoneDate);
+                    resultsContainer.appendChild(resultItem);
+                });
+
+                resultsContainer.style.display = 'block';
+            }
+
+            calculateBtn.addEventListener('click', calculateAndDisplayMilestones);
+            populateMaterials();
+        });
+    </script>
+</body>
+</html>
