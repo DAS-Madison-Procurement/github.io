@@ -203,17 +203,18 @@
                 const deliveryDateStr = deliveryDateInput.value;
 
                 if (!deliveryDateStr) {
-                    // Using a more user-friendly modal/message box instead of alert()
                     const existingModal = document.querySelector('.error-modal');
                     if(existingModal) existingModal.remove();
 
                     const modal = document.createElement('div');
-                    modal.className = 'error-modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50';
+                    // MODIFICATION: Changed 'items-center' to 'items-start' and added 'pt-20' to ensure visibility on small screens
+                    modal.className = 'error-modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-start justify-center z-50 p-4 pt-20';
                     modal.innerHTML = `
-                        <div class="bg-white p-6 rounded-lg shadow-xl text-center">
+                        <div class="bg-white p-6 rounded-lg shadow-xl text-center w-full max-w-sm">
                             <h3 class="text-lg font-medium text-gray-900 mb-4">Input Required</h3>
                             <p class="text-sm text-gray-600 mb-6">Please select a final delivery date to continue.</p>
-                            <button class="px-4 py-2 bg-brand text-white rounded-md hover:bg-brand-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand">OK</button>
+                            // MODIFICATION: Applied .btn-brand class for consistent styling and hover effect
+                            <button class="btn-brand font-semibold py-2 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">OK</button>
                         </div>
                     `;
                     document.body.appendChild(modal);
