@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Issue for Milestone (IFM) Calculator</title>
+    <title>FirstEnergy Issue for Milestone (IFM) Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -49,7 +49,7 @@
         <div class="flex items-center justify-center mb-8 gap-6 text-left">
             <img src="logo.png" alt="Dashiell Corp Logo" class="h-20 w-auto">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800">Issue for Milestone (IFM) Calculator</h1>
+                <h1 class="text-3xl font-bold text-gray-800">FirstEnergy Issue for Milestone (IFM) Calculator</h1>
                 <p class="text-gray-600 mt-1">Select a material and delivery date to see milestone deadlines.</p>
                 <!-- Last Updated Display -->
                 <p id="last-updated" class="text-sm text-gray-500 mt-2"></p>
@@ -94,9 +94,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // !!! IMPORTANT !!!
-            // PASTE THE "PUBLISH TO WEB" CSV LINK FOR YOUR NEW GOOGLE SHEET HERE
-            const googleSheetUrl = 'PASTE_YOUR_IFM_GOOGLE_SHEET_LINK_HERE';
+            // The Google Sheet URL has been updated with your provided link.
+            const googleSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRQlLZlhT9Ha7KBhMrLAYeQkfBtS9DUxA9SlTOHa-njOuD-CPfCi_gNeP4IVLjZjGLPNz9ejOVoM4B7/pub?output=csv';
 
             const materialSelect = document.getElementById('material-select');
             const deliveryDateInput = document.getElementById('delivery-date');
@@ -133,11 +132,8 @@
             async function populateMaterials() {
                 materialSelect.disabled = true;
                 try {
-                    if (googleSheetUrl === 'PASTE_YOUR_IFM_GOOGLE_SHEET_LINK_HERE') {
-                        throw new Error('Google Sheet URL has not been set in the script.');
-                    }
                     const response = await fetch(googleSheetUrl);
-                    if (!response.ok) throw new Error('Could not fetch data from Google Sheet.');
+                    if (!response.ok) throw new Error('Could not fetch data from Google Sheet. Check link and share settings.');
                     
                     const csvText = await response.text();
                     const rows = csvText.trim().split('\n').slice(1).filter(row => row);
@@ -150,7 +146,6 @@
                         const material = (columns[0] || '').trim().replace(/"/g, '');
                         const milestone = (columns[1] || '').trim().replace(/"/g, '');
                         const weeks = parseInt((columns[2] || '').trim(), 10);
-                        // ** The column order is changed here **
                         const link = (columns[3] || '').trim().replace(/"/g, '');
                         const lastEdited = (columns[4] || '').trim().replace(/"/g, '');
 
@@ -169,7 +164,6 @@
                             }
                             milestoneData[material].milestones.push({ milestone, weeks });
                             
-                            // Store the link for the material, only if it hasn't been set yet
                             if (link && !milestoneData[material].link) {
                                 milestoneData[material].link = link;
                             }
@@ -209,7 +203,21 @@
                 const deliveryDateStr = deliveryDateInput.value;
 
                 if (!deliveryDateStr) {
-                    alert('Please select a final delivery date.');
+                    // Using a more user-friendly modal/message box instead of alert()
+                    const existingModal = document.querySelector('.error-modal');
+                    if(existingModal) existingModal.remove();
+
+                    const modal = document.createElement('div');
+                    modal.className = 'error-modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50';
+                    modal.innerHTML = `
+                        <div class="bg-white p-6 rounded-lg shadow-xl text-center">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Input Required</h3>
+                            <p class="text-sm text-gray-600 mb-6">Please select a final delivery date to continue.</p>
+                            <button class="px-4 py-2 bg-brand text-white rounded-md hover:bg-brand-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand">OK</button>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                    modal.querySelector('button').addEventListener('click', () => modal.remove());
                     return;
                 }
                 
@@ -219,7 +227,6 @@
                 
                 const deliveryDate = new Date(deliveryDateStr + 'T00:00:00Z');
                 
-                // Sort milestones by weeks descending (earliest deadline first)
                 const sortedMilestones = [...data.milestones].sort((a, b) => b.weeks - a.weeks);
 
                 sortedMilestones.forEach(item => {
