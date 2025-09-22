@@ -28,7 +28,7 @@
         .text-brand {
             color: #a1805b;
         }
-         .focus-brand:focus {
+        .focus-brand:focus {
             --tw-ring-color: #a1805b;
         }
     </style>
@@ -50,6 +50,14 @@
             <select id="material-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand focus:border-indigo-500">
                 <option>Loading lead times...</option>
             </select>
+            
+            <!-- NEW: SharePoint Link Display -->
+            <div id="link-container" class="mt-4 text-center border-t pt-4" style="display: none;">
+                <a id="sharepoint-link" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 font-semibold text-brand hover:underline">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><polyline points="10 2 10 10 13 7 16 10 16 2"/></svg>
+                    <span>View Specification in SharePoint</span>
+                </a>
+            </div>
         </div>
 
         <div class="grid md:grid-cols-2 gap-8">
@@ -100,6 +108,27 @@
             const googleSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrfsD6iiZufaNtdn7CrtBm_S19RD0lDB62tX0eeur8yEP210Yr-p6aOnsxPO3hqATI-obYVt1Cydba/pub?gid=0&single=true&output=csv';
 
             const materialSelect = document.getElementById('material-select');
+            const linkContainer = document.getElementById('link-container');
+            const sharepointLink = document.getElementById('sharepoint-link');
+
+            function updateSharepointLink() {
+                if (materialSelect.options.length === 0 || materialSelect.selectedIndex === -1) {
+                    linkContainer.style.display = 'none';
+                    return;
+                }
+                const selectedOption = materialSelect.options[materialSelect.selectedIndex];
+                const link = selectedOption.dataset.link;
+                
+                // DEBUGGING: Log the link found for the selected material
+                console.log('Selected material link:', link);
+
+                if (link && link.trim() !== '' && link !== 'undefined') {
+                    sharepointLink.href = link;
+                    linkContainer.style.display = 'block';
+                } else {
+                    linkContainer.style.display = 'none';
+                }
+            }
 
             async function populateLeadTimes() {
                 materialSelect.disabled = true;
@@ -114,18 +143,26 @@
                     const rows = csvText.trim().split('\n').slice(1).filter(row => row);
 
                     const leadTimeData = rows.map(row => {
-                        const [name, weeks] = row.split(',');
+                        const columns = row.split(',');
+                        const name = columns[0];
+                        const weeks = columns[1];
+                        const link = columns[2]; // Explicitly get the third column
+                        
                         const cleanedName = name ? name.trim().replace(/"/g, '') : null;
                         const cleanedWeeks = weeks ? parseInt(weeks.trim(), 10) : null;
+                        const cleanedLink = link ? link.trim().replace(/"/g, '') : null;
                         
+                        // DEBUGGING: Log what the code is parsing for each row
+                        console.log(`Parsing row: Name='${cleanedName}', Weeks='${cleanedWeeks}', Link='${cleanedLink}'`);
+
                         if (cleanedName && cleanedWeeks !== null && !isNaN(cleanedWeeks)) {
-                            return { name: cleanedName, weeks: cleanedWeeks };
+                            return { name: cleanedName, weeks: cleanedWeeks, link: cleanedLink };
                         }
                         return null;
                     }).filter(Boolean);
 
                     if (leadTimeData.length === 0) {
-                        throw new Error('No valid data was found in the sheet. Ensure it has "Material" and "Weeks" columns.');
+                        throw new Error('No valid data was found. Ensure sheet has "Material", "Weeks", and "SharepointLink" columns.');
                     }
 
                     materialSelect.innerHTML = '';
@@ -134,9 +171,14 @@
                     leadTimeData.forEach(item => {
                         const option = document.createElement('option');
                         option.value = item.weeks;
+                        if (item.link) {
+                            option.dataset.link = item.link;
+                        }
                         option.textContent = `${item.name} (${item.weeks} weeks)`;
                         materialSelect.appendChild(option);
                     });
+
+                    updateSharepointLink();
 
                 } catch (error) {
                     console.error('Error fetching or parsing lead times:', error);
@@ -148,6 +190,8 @@
             
             populateLeadTimes();
             
+            materialSelect.addEventListener('change', updateSharepointLink);
+
             const formatDate = (date) => {
                  if (!date || isNaN(date)) return 'Invalid Date';
                 return date.toLocaleDateString('en-US', {
@@ -195,7 +239,7 @@
                     return;
                 }
                 
-                deliveryDateResult.classList.remove('text-red-500');
+                orderByDateResult.classList.remove('text-red-500');
                 const deliveryDate = new Date(deliveryDateStr + 'T00:00:00Z');
                 const leadTimeDays = leadTimeWeeks * 7;
                 
