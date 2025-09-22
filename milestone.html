@@ -51,6 +51,8 @@
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">Issue for Milestone (IFM) Calculator</h1>
                 <p class="text-gray-600 mt-1">Select a material and delivery date to see milestone deadlines.</p>
+                <!-- Last Updated Display -->
+                <p id="last-updated" class="text-sm text-gray-500 mt-2"></p>
             </div>
         </div>
 
@@ -61,6 +63,15 @@
                     <option>Loading materials...</option>
                 </select>
             </div>
+            
+            <!-- SharePoint Link Display -->
+            <div id="ifm-link-container" class="text-center border-t pt-4" style="display: none;">
+                <a id="ifm-link" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 font-semibold text-brand hover:underline">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-webhook"><path d="M18 16.98h.01"/><path d="M18 16.98h.01"/><path d="M11.27 21.98A5.02 5.02 0 1 0 6 17a5 5 0 0 0 5.27 5Z"/><path d="M15 17a5 5 0 1 0 0-10H6"/><path d="M12.73 2.02A5.02 5.02 0 1 0 18 7a5 5 0 0 0-5.27-5Z"/></svg>
+                    <span>Link to IFM Hub</span>
+                </a>
+            </div>
+
             <div>
                 <label for="delivery-date" class="block text-sm font-medium text-gray-700">Final Delivery Date</label>
                 <input type="date" id="delivery-date" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
@@ -91,6 +102,9 @@
             const deliveryDateInput = document.getElementById('delivery-date');
             const calculateBtn = document.getElementById('calculate-btn');
             const resultsContainer = document.getElementById('results-container');
+            const lastUpdatedElement = document.getElementById('last-updated');
+            const ifmLinkContainer = document.getElementById('ifm-link-container');
+            const ifmLink = document.getElementById('ifm-link');
             
             let milestoneData = {};
 
@@ -103,6 +117,18 @@
                     timeZone: 'UTC'
                 });
             };
+
+            function updateIfmLink() {
+                const selectedMaterial = materialSelect.value;
+                const data = milestoneData[selectedMaterial];
+                
+                if (data && data.link) {
+                    ifmLink.href = data.link;
+                    ifmLinkContainer.style.display = 'block';
+                } else {
+                    ifmLinkContainer.style.display = 'none';
+                }
+            }
 
             async function populateMaterials() {
                 materialSelect.disabled = true;
@@ -117,20 +143,44 @@
                     const rows = csvText.trim().split('\n').slice(1).filter(row => row);
 
                     milestoneData = {}; // Clear previous data
+                    let mostRecentDate = null;
 
                     rows.forEach(row => {
                         const columns = row.split(',');
                         const material = (columns[0] || '').trim().replace(/"/g, '');
                         const milestone = (columns[1] || '').trim().replace(/"/g, '');
                         const weeks = parseInt((columns[2] || '').trim(), 10);
+                        // ** The column order is changed here **
+                        const link = (columns[3] || '').trim().replace(/"/g, '');
+                        const lastEdited = (columns[4] || '').trim().replace(/"/g, '');
+
+                        if (lastEdited) {
+                            const currentDate = new Date(lastEdited);
+                            if (!isNaN(currentDate.getTime())) {
+                                if (!mostRecentDate || currentDate > mostRecentDate) {
+                                    mostRecentDate = currentDate;
+                                }
+                            }
+                        }
 
                         if (material && milestone && !isNaN(weeks)) {
                             if (!milestoneData[material]) {
-                                milestoneData[material] = [];
+                                milestoneData[material] = { milestones: [], link: null };
                             }
-                            milestoneData[material].push({ milestone, weeks });
+                            milestoneData[material].milestones.push({ milestone, weeks });
+                            
+                            // Store the link for the material, only if it hasn't been set yet
+                            if (link && !milestoneData[material].link) {
+                                milestoneData[material].link = link;
+                            }
                         }
                     });
+
+                    if (mostRecentDate) {
+                        lastUpdatedElement.textContent = `Milestones last updated on: ${formatDate(mostRecentDate)}`;
+                    } else {
+                        lastUpdatedElement.textContent = 'Last update time not available.';
+                    }
 
                     const materials = Object.keys(milestoneData).sort();
                     if (materials.length === 0) throw new Error('No valid material data found in the sheet.');
@@ -142,10 +192,13 @@
                         option.textContent = material;
                         materialSelect.appendChild(option);
                     });
+                    
+                    updateIfmLink(); // Set the link for the initially selected material
 
                 } catch (error) {
                     console.error('Error:', error);
                     materialSelect.innerHTML = `<option>Error: ${error.message}</option>`;
+                    lastUpdatedElement.textContent = 'Could not verify update status.';
                 } finally {
                     materialSelect.disabled = false;
                 }
@@ -161,15 +214,15 @@
                 }
                 
                 resultsContainer.innerHTML = '';
-                const milestones = milestoneData[selectedMaterial];
-                if (!milestones) return;
+                const data = milestoneData[selectedMaterial];
+                if (!data || !data.milestones) return;
                 
                 const deliveryDate = new Date(deliveryDateStr + 'T00:00:00Z');
                 
                 // Sort milestones by weeks descending (earliest deadline first)
-                milestones.sort((a, b) => b.weeks - a.weeks);
+                const sortedMilestones = [...data.milestones].sort((a, b) => b.weeks - a.weeks);
 
-                milestones.forEach(item => {
+                sortedMilestones.forEach(item => {
                     const deadline = new Date(deliveryDate.getTime());
                     deadline.setDate(deadline.getDate() - (item.weeks * 7));
 
@@ -191,10 +244,12 @@
 
                 resultsContainer.style.display = 'block';
             }
-
+            
+            materialSelect.addEventListener('change', updateIfmLink);
             calculateBtn.addEventListener('click', calculateAndDisplayMilestones);
             populateMaterials();
         });
     </script>
 </body>
 </html>
+
