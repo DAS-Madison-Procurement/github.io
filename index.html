@@ -42,6 +42,8 @@
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">FirstEnergy Procurement Lead Time Calculator</h1>
                 <p class="text-gray-600 mt-1">Select a material to calculate order and delivery dates.</p>
+                <!-- Last Updated Display -->
+                <p id="last-updated" class="text-sm text-gray-500 mt-2"></p>
             </div>
         </div>
 
@@ -54,7 +56,7 @@
             <!-- SharePoint Link Display -->
             <div id="link-container" class="mt-4 text-center border-t pt-4" style="display: none;">
                 <a id="sharepoint-link" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 font-semibold text-brand hover:underline">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><polyline points="10 2 10 10 13 7 16 10 16 2"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 a 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><polyline points="10 2 10 10 13 7 16 10 16 2"/></svg>
                     <span>View Lead Time Report</span>
                 </a>
             </div>
@@ -110,6 +112,7 @@
             const materialSelect = document.getElementById('material-select');
             const linkContainer = document.getElementById('link-container');
             const sharepointLink = document.getElementById('sharepoint-link');
+            const lastUpdatedElement = document.getElementById('last-updated');
 
             function updateSharepointLink() {
                 if (materialSelect.options.length === 0 || materialSelect.selectedIndex === -1) {
@@ -118,9 +121,6 @@
                 }
                 const selectedOption = materialSelect.options[materialSelect.selectedIndex];
                 const link = selectedOption.dataset.link;
-                
-                // DEBUGGING: Log the link found for the selected material
-                console.log('Selected material link:', link);
 
                 if (link && link.trim() !== '' && link !== 'undefined') {
                     sharepointLink.href = link;
@@ -142,18 +142,29 @@
                     
                     const rows = csvText.trim().split('\n').slice(1).filter(row => row);
 
+                    let mostRecentDate = null; // Variable to track the latest date
+
                     const leadTimeData = rows.map(row => {
                         const columns = row.split(',');
                         const name = columns[0];
                         const weeks = columns[1];
-                        const link = columns[2]; // Explicitly get the third column
+                        const link = columns[2];
+                        const lastEdited = columns[3]; // Read the fourth column
                         
                         const cleanedName = name ? name.trim().replace(/"/g, '') : null;
                         const cleanedWeeks = weeks ? parseInt(weeks.trim(), 10) : null;
                         const cleanedLink = link ? link.trim().replace(/"/g, '') : null;
-                        
-                        // DEBUGGING: Log what the code is parsing for each row
-                        console.log(`Parsing row: Name='${cleanedName}', Weeks='${cleanedWeeks}', Link='${cleanedLink}'`);
+                        const cleanedLastEdited = lastEdited ? lastEdited.trim().replace(/"/g, '') : null;
+
+                        // Find the most recent date from the new column
+                        if (cleanedLastEdited) {
+                            const currentDate = new Date(cleanedLastEdited);
+                            if (!isNaN(currentDate.getTime())) { // Check if the date is valid
+                                if (!mostRecentDate || currentDate > mostRecentDate) {
+                                    mostRecentDate = currentDate;
+                                }
+                            }
+                        }
 
                         if (cleanedName && cleanedWeeks !== null && !isNaN(cleanedWeeks)) {
                             return { name: cleanedName, weeks: cleanedWeeks, link: cleanedLink };
@@ -162,7 +173,14 @@
                     }).filter(Boolean);
 
                     if (leadTimeData.length === 0) {
-                        throw new Error('No valid data was found. Ensure sheet has "Material", "Weeks", and "SharepointLink" columns.');
+                        throw new Error('No valid data was found in the sheet.');
+                    }
+
+                    // Update the "Last Updated" display on the page
+                    if (mostRecentDate) {
+                        lastUpdatedElement.textContent = `Lead times last updated on: ${formatDate(mostRecentDate)}`;
+                    } else {
+                        lastUpdatedElement.textContent = 'Last update time not available.';
                     }
 
                     materialSelect.innerHTML = '';
@@ -183,6 +201,7 @@
                 } catch (error) {
                     console.error('Error fetching or parsing lead times:', error);
                     materialSelect.innerHTML = `<option>Error: Could not load data.</option>`;
+                    lastUpdatedElement.textContent = 'Could not verify update status.';
                 } finally {
                     materialSelect.disabled = false;
                 }
