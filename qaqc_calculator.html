@@ -125,6 +125,26 @@
             </div>
         </div>
 
+        <!-- Batch Project Analyzer -->
+        <div class="calculator-card collapsible-card">
+            <div class="collapsible-toggle">
+                <h2 class="text-xl font-semibold text-gray-800">Batch Project Analyzer</h2>
+                <svg class="chevron-icon w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </div>
+            <div class="collapsible-content">
+                <div class="px-8 pb-8 pt-6 border-t border-gray-200">
+                    <p class="text-sm text-gray-600 mb-4">Paste your project list below. Use a comma-separated format: <br><code class="bg-gray-100 p-1 rounded text-xs">Project Name, Engineering Hours, Current Review Days</code>. Each project should be on a new line.</p>
+                    <textarea id="batch-input" rows="8" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand font-mono text-sm" placeholder="Project A, 450, 28&#10;Project B, 2800, 70&#10;Project C, 7000, 85"></textarea>
+                    <button id="analyze-batch-btn" class="w-full mt-4 btn-brand font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">
+                        Analyze Projects
+                    </button>
+                    <div id="batch-results-container" class="mt-6 overflow-x-auto">
+                        <!-- Results will be injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Find Time by Score Calculator -->
         <div class="calculator-card collapsible-card">
             <div class="collapsible-toggle">
@@ -329,7 +349,12 @@
             const lastUpdatedElement = document.getElementById('last-updated');
             const discussionNote = document.getElementById('discussion-note');
             
-            // New calculator elements
+            // Batch Analyzer Elements
+            const batchInput = document.getElementById('batch-input');
+            const analyzeBatchBtn = document.getElementById('analyze-batch-btn');
+            const batchResultsContainer = document.getElementById('batch-results-container');
+
+            // Find by Score Elements
             const scoreCalcHoursInput = document.getElementById('score-calc-hours');
             const desiredScoreSelect = document.getElementById('desired-score');
             const calculateTimeByScoreBtn = document.getElementById('calculate-time-by-score-btn');
@@ -511,6 +536,105 @@
             calculateBtn.addEventListener('click', calculate);
             engineeringHoursInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') calculate(); });
             
+            analyzeBatchBtn.addEventListener('click', () => {
+                const inputText = batchInput.value.trim();
+                if (!inputText) {
+                    batchResultsContainer.innerHTML = `<p class="text-red-500 text-center">Please paste project data into the text area.</p>`;
+                    return;
+                }
+
+                if (guidelines.length === 0) {
+                    batchResultsContainer.innerHTML = `<p class="text-red-500 text-center">Guideline data is not loaded yet. Please wait a moment and try again.</p>`;
+                    return;
+                }
+
+                const projects = inputText.split('\n').map(line => {
+                    const parts = line.split(',');
+                    if (parts.length !== 3) return null;
+                    const name = parts[0].trim();
+                    const hours = parseInt(parts[1].trim(), 10);
+                    const duration = parseInt(parts[2].trim(), 10);
+                    if (!name || isNaN(hours) || isNaN(duration)) return null;
+                    return { name, hours, duration };
+                }).filter(Boolean);
+
+                if (projects.length === 0) {
+                    batchResultsContainer.innerHTML = `<p class="text-red-500 text-center">No valid projects found. Please check the format: Project Name, Hours, Days</p>`;
+                    return;
+                }
+
+                let resultsHTML = `
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr>
+                                <th class="p-3 text-sm font-semibold text-gray-700 border-b">Project</th>
+                                <th class="p-3 text-sm font-semibold text-gray-700 border-b text-center">Current Score</th>
+                                <th class="p-3 text-sm font-semibold text-gray-700 border-b text-center">Days for Score 5</th>
+                                <th class="p-3 text-sm font-semibold text-gray-700 border-b text-center">Adjustment Needed</th>
+                                <th class="p-3 text-sm font-semibold text-gray-700 border-b">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                projects.forEach(project => {
+                    const guideline = guidelines.find(g => project.hours >= g.minHours && project.hours <= g.maxHours);
+                    if (!guideline) {
+                        resultsHTML += `
+                            <tr class="bg-gray-50">
+                                <td class="p-3 border-b border-gray-200 font-medium">${project.name}</td>
+                                <td class="p-3 border-b border-gray-200 text-center" colspan="4">No size guideline found for ${project.hours.toLocaleString()} hours.</td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    let sizeKey = guideline.size.replace(' Projects', '').substring(0, 3).trim();
+                    if(sizeKey === 'Sma') sizeKey = 'S';
+                    if(sizeKey === 'Med') sizeKey = 'M';
+                    if(sizeKey === 'Lar') sizeKey = 'L';
+
+                    const currentScore = getQaqcScore(sizeKey, project.duration);
+                    const targetDaysFor5 = getDaysForScore(sizeKey, 5);
+                    
+                    let adjustment = 'N/A';
+                    let status = '';
+                    let rowClass = '';
+
+                    if (targetDaysFor5 !== null) {
+                        const difference = targetDaysFor5 - project.duration;
+                        if (difference > 0) {
+                            adjustment = `+${difference} days`;
+                            status = `<span class="font-semibold text-amber-600">Needs Adjustment</span>`;
+                            rowClass = 'bg-amber-50';
+                        } else {
+                            adjustment = 'None';
+                            status = `<span class="font-semibold text-green-600">Meets Goal</span>`;
+                        }
+                    } else {
+                        if (currentScore >= 4) {
+                             status = `<span class="font-semibold text-green-600">Meets Goal (Score 4)</span>`;
+                        } else {
+                             status = `<span class="font-semibold text-amber-600">Below Goal (Score 4)</span>`;
+                             rowClass = 'bg-amber-50';
+                        }
+                    }
+
+                    resultsHTML += `
+                        <tr class="${rowClass}">
+                            <td class="p-3 border-b border-gray-200 font-medium">${project.name}</td>
+                            <td class="p-3 border-b border-gray-200 text-center score-${currentScore} font-bold">${currentScore}</td>
+                            <td class="p-3 border-b border-gray-200 text-center">${targetDaysFor5 || 'N/A'}</td>
+                            <td class="p-3 border-b border-gray-200 text-center">${adjustment}</td>
+                            <td class="p-3 border-b border-gray-200">${status}</td>
+                        </tr>
+                    `;
+                });
+
+                resultsHTML += `</tbody></table>`;
+                batchResultsContainer.innerHTML = resultsHTML;
+            });
+
             calculateTimeByScoreBtn.addEventListener('click', () => {
                 const hours = parseInt(scoreCalcHoursInput.value, 10);
                 const desiredScore = parseInt(desiredScoreSelect.value, 10);
