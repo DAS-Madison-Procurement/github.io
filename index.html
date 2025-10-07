@@ -38,7 +38,7 @@
     <div class="w-full max-w-4xl">
         <div class="flex items-center justify-center mb-8 gap-6 text-left">
             <!-- This now points to the logo file you will upload -->
-            <img src="logo.png" alt="Dashiell Corp Logo" class="h-20 w-auto">
+            <img src="logo.png" alt="Dashiell Corp Logo" class="h-20 w-auto" onerror="this.style.display='none'">
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">FirstEnergy Procurement Lead Time Calculator</h1>
                 <p class="text-gray-600 mt-1">Select a material to calculate order and delivery dates.</p>
@@ -147,9 +147,12 @@
         </div>
 
         <!-- New Button Section -->
-        <div class="text-center mt-8 pt-8 border-t">
+        <div class="text-center mt-8 pt-8 border-t space-x-4">
             <a href="qaqc_calculator.html" class="inline-block bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-lg hover:bg-gray-300 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
                 Go to QAQC Review Time Calculator
+            </a>
+            <a href="milestone_calculator.html" class="inline-block bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-lg hover:bg-gray-300 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
+                Go to IFM Milestone Calculator
             </a>
         </div>
         
