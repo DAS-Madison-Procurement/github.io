@@ -133,8 +133,8 @@
             </div>
             <div class="collapsible-content">
                 <div class="px-8 pb-8 pt-6 border-t border-gray-200">
-                    <p class="text-sm text-gray-600 mb-4">Paste your project list below. Use a comma-separated format: <br><code class="bg-gray-100 p-1 rounded text-xs">Project Name, Engineering Hours, Current Review Days</code>. Each project should be on a new line.</p>
-                    <textarea id="batch-input" rows="8" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand font-mono text-sm" placeholder="Project A, 450, 28&#10;Project B, 2800, 70&#10;Project C, 7000, 85"></textarea>
+                    <p class="text-sm text-gray-600 mb-4">Copy rows directly from your spreadsheet and paste them below. The calculator will automatically find the Project Name, Hours, and Duration.</p>
+                    <textarea id="batch-input" rows="8" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand font-mono text-sm" placeholder="705871    Sammis SS Boardman-Nevada Exit    16533057 ... 66"></textarea>
                     <button id="analyze-batch-btn" class="w-full mt-4 btn-brand font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">
                         Analyze Projects
                     </button>
@@ -549,17 +549,19 @@
                 }
 
                 const projects = inputText.split('\n').map(line => {
-                    const parts = line.split(',');
-                    if (parts.length !== 3) return null;
-                    const name = parts[0].trim();
-                    const hours = parseInt(parts[1].trim(), 10);
-                    const duration = parseInt(parts[2].trim(), 10);
+                    const parts = line.split('\t'); // Use tab as a separator
+                    if (parts.length < 11) return null; // Ensure there are enough columns
+                    
+                    const name = parts[1] ? parts[1].trim() : '';
+                    const hours = parts[5] ? parseInt(parts[5].trim(), 10) : NaN;
+                    const duration = parts[10] ? parseInt(parts[10].trim(), 10) : NaN;
+
                     if (!name || isNaN(hours) || isNaN(duration)) return null;
                     return { name, hours, duration };
                 }).filter(Boolean);
 
                 if (projects.length === 0) {
-                    batchResultsContainer.innerHTML = `<p class="text-red-500 text-center">No valid projects found. Please check the format: Project Name, Hours, Days</p>`;
+                    batchResultsContainer.innerHTML = `<p class="text-red-500 text-center">No valid projects found. Please ensure you are copying the full rows from your spreadsheet.</p>`;
                     return;
                 }
 
