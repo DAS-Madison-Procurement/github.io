@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FirstEnergy QAQC Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .calculator-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease-in-out;
+        }
+        .btn-brand {
+            background-color: #005a9e; /* FirstEnergy Blue */
+            color: white;
+        }
+        .btn-brand:hover {
+            background-color: #004a83;
+        }
+        .text-brand {
+            color: #005a9e;
+        }
+        .focus-brand:focus {
+            --tw-ring-color: #005a9e;
+        }
+        .result-box {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .result-box-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .result-box-value {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #111827;
+            min-height: 2.75rem; /* Ensure consistent height */
+        }
+        .score-5 { color: #16a34a; } /* Green */
+        .score-4 { color: #2563eb; } /* Blue */
+        .score-3 { color: #ca8a04; } /* Yellow */
+        .score-2 { color: #ea580c; } /* Orange */
+        .score-1 { color: #dc2626; } /* Red */
+
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-2xl">
+        <div class="flex items-center justify-center mb-8 gap-6 text-left">
+            <img src="logo.png" alt="Dashiell Corp Logo" class="h-20 w-auto">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">QAQC Review Time Calculator</h1>
+                <p class="text-gray-600 mt-1">Enter project design hours to estimate review time and score.</p>
+                 <p id="last-updated" class="text-sm text-gray-500 mt-2">Loading guideline data...</p>
+            </div>
+        </div>
+
+        <div class="calculator-card">
+            <div class="space-y-6">
+                <div>
+                    <label for="engineering-hours" class="block text-lg font-medium text-gray-800 mb-2">Total Project Design Hours</label>
+                    <input type="number" id="engineering-hours" placeholder="e.g., 3000" class="mt-1 w-full p-4 border border-gray-300 rounded-lg text-lg focus:ring-2 focus-brand">
+                </div>
+
+                <button id="calculate-btn" class="w-full btn-brand font-semibold py-4 px-4 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">
+                    Calculate
+                </button>
+
+                <div class="grid md:grid-cols-3 gap-6 pt-4 border-t">
+                     <div class="result-box">
+                         <span class="result-box-label">Project Size</span>
+                         <p id="project-size-result" class="result-box-value"></p>
+                     </div>
+                     <div class="result-box">
+                         <span class="result-box-label">Est. Review Time</span>
+                         <p id="review-time-result" class="result-box-value"></p>
+                     </div>
+                     <div class="result-box">
+                         <span class="result-box-label">QAQC Grade</span>
+                         <p id="qaqc-score-result" class="result-box-value"></p>
+                     </div>
+                </div>
+                 <div id="discussion-note" class="text-center text-amber-600 font-semibold pt-4" style="display: none;"></div>
+            </div>
+        </div>
+        
+         <div class="text-center mt-8 pt-8 border-t">
+            <a href="index.html" class="inline-block bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-lg hover:bg-gray-300 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
+                Go to Procurement Lead Time Calculator
+            </a>
+        </div>
+
+        <footer class="text-center text-gray-500 text-sm mt-8">
+            &copy; 2025 Dashiell Corp, for FirstEnergy.
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const engineeringHoursInput = document.getElementById('engineering-hours');
+            const calculateBtn = document.getElementById('calculate-btn');
+            const projectSizeResult = document.getElementById('project-size-result');
+            const reviewTimeResult = document.getElementById('review-time-result');
+            const qaqcScoreResult = document.getElementById('qaqc-score-result');
+            const lastUpdatedElement = document.getElementById('last-updated');
+            const discussionNote = document.getElementById('discussion-note');
+            const googleSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdpYw6MNdXxL_H19JD8vJzNbKakS4eh2rud1QyidT4sN92xgjVtced3Y9FgjLMkMPD_dG6t6spqfMy/pub?output=csv';
+
+            let guidelines = [];
+
+            async function fetchGuidelines() {
+                try {
+                    const response = await fetch(googleSheetUrl);
+                    if (!response.ok) throw new Error('Network response was not ok. Please ensure the Google Sheet is "Published to the web".');
+                    const csvText = await response.text();
+                    
+                    const rows = csvText.trim().split('\n').slice(1).filter(row => row);
+                    let mostRecentDate = null;
+
+                    guidelines = rows.map(row => {
+                        const columns = row.split(',');
+                        const lastEdited = columns[4] ? columns[4].trim().replace(/"/g, '') : null;
+
+                        if (lastEdited) {
+                            const currentDate = new Date(lastEdited);
+                            if (!isNaN(currentDate.getTime())) {
+                                if (!mostRecentDate || currentDate > mostRecentDate) {
+                                    mostRecentDate = currentDate;
+                                }
+                            }
+                        }
+                        
+                        return {
+                            size: columns[0].trim().replace(/"/g, ''),
+                            minHours: parseInt(columns[1].trim(), 10),
+                            maxHours: parseInt(columns[2].trim(), 10),
+                            days: parseInt(columns[3].trim(), 10),
+                        };
+                    });
+
+                    if (mostRecentDate) {
+                         const formattedDate = mostRecentDate.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                        lastUpdatedElement.textContent = `Guidelines last updated on: ${formattedDate}`;
+                    } else {
+                        lastUpdatedElement.textContent = `Processing guidelines are managed live via Google Sheets.`;
+                    }
+
+                } catch (error) {
+                    console.error('Failed to load guidelines:', error);
+                    projectSizeResult.textContent = 'Error';
+                    lastUpdatedElement.textContent = `Error: Could not load guideline data. ${error.message}`;
+                }
+            }
+
+
+            // Based on the image provided for QAQC Duration
+            const qaqcScores = {
+                'S': { 31: 5, 28: 4, 26: 3, 23: 2, 20: 1 },
+                'M': { 61: 5, 56: 4, 52: 3, 48: 2, 44: 1 },
+                'L': { 76: 5, 70: 4, 65: 3, 60: 2, 55: 1 },
+                'XL': { 92: 5, 84: 4, 77: 3, 70: 2, 63: 1 },
+                '2XL': { 'default': 4 }, // Simplified based on the "84+ days"
+                '3XL': { 'default': 4 },
+                '4XL': { 'default': 4 },
+            };
+
+            function getQaqcScore(sizeKey, reviewDays) {
+                if (!qaqcScores[sizeKey]) return 'N/A';
+
+                const scoreMap = qaqcScores[sizeKey];
+                 if(scoreMap.default) return scoreMap.default;
+
+                const sortedDays = Object.keys(scoreMap).map(Number).sort((a, b) => b - a);
+
+                for (const days of sortedDays) {
+                    if (reviewDays >= days) {
+                        return scoreMap[days];
+                    }
+                }
+                return 1; // Return lowest score if below all thresholds
+            }
+
+            function calculate() {
+                const hours = parseInt(engineeringHoursInput.value, 10);
+                discussionNote.style.display = 'none';
+                qaqcScoreResult.className = 'result-box-value'; // Reset classes
+
+
+                if (isNaN(hours) || hours <= 0) {
+                    projectSizeResult.textContent = '';
+                    reviewTimeResult.textContent = '';
+                    qaqcScoreResult.textContent = '';
+                    return;
+                }
+
+                const guideline = guidelines.find(g => hours >= g.minHours && hours <= g.maxHours);
+
+                if (guideline) {
+                    projectSizeResult.textContent = guideline.size;
+                    
+                    const weeks = guideline.days / 5;
+                    reviewTimeResult.innerHTML = `<span class="block">${guideline.days} days</span><span class="text-base font-normal text-gray-500">(${weeks.toFixed(1)} wks)</span>`;
+                    
+                    // Special condition for the discussion note
+                    if (hours > 10000 || guideline.days >= 60) { // 12 weeks * 5 days/week = 60 days
+                         discussionNote.textContent = 'Any project with MORE than 10,001 Engineering Hours and/or 12+ Weeks will require a discussion.';
+                         discussionNote.style.display = 'block';
+                    }
+                    
+                    // Score Calculation
+                    let sizeKey = guideline.size.replace(' Projects', '').substring(0, 3).trim();
+                    if(sizeKey === 'Sma') sizeKey = 'S';
+                    if(sizeKey === 'Med') sizeKey = 'M';
+                    if(sizeKey === 'Lar') sizeKey = 'L';
+
+                    const reviewDays = guideline.days; // Use days directly from the sheet
+                    const score = getQaqcScore(sizeKey, reviewDays);
+                    
+                    qaqcScoreResult.textContent = score;
+                    qaqcScoreResult.classList.add(`score-${score}`);
+
+                } else {
+                    projectSizeResult.textContent = 'N/A';
+                    reviewTimeResult.textContent = 'N/A';
+                    qaqcScoreResult.textContent = 'N/A';
+                }
+            }
+
+            calculateBtn.addEventListener('click', calculate);
+            engineeringHoursInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    calculate();
+                }
+            });
+            
+            fetchGuidelines();
+        });
+    </script>
+</body>
+</html>
+
