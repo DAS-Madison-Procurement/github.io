@@ -53,16 +53,18 @@
         .score-3 { color: #ca8a04; } /* Yellow */
         .score-2 { color: #ea580c; } /* Orange */
         .score-1 { color: #dc2626; } /* Red */
-
+        table thead th {
+            background-color: #f3f4f6;
+        }
     </style>
 </head>
 <body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-2xl">
-        <div class="flex items-center justify-center mb-8 gap-6 text-left">
+    <div class="w-full max-w-4xl space-y-8">
+        <div class="flex items-center justify-center gap-6 text-left">
             <img src="logo.png" alt="Dashiell Corp Logo" class="h-20 w-auto">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800">QAQC Review Time Calculator</h1>
+                <h1 class="text-3xl font-bold text-gray-800">FirstEnergy QAQC Review Time Calculator</h1>
                 <p class="text-gray-600 mt-1">Enter project design hours to estimate review time and score.</p>
                  <p id="last-updated" class="text-sm text-gray-500 mt-2">Loading guideline data...</p>
             </div>
@@ -76,7 +78,7 @@
                 </div>
 
                 <button id="calculate-btn" class="w-full btn-brand font-semibold py-4 px-4 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">
-                    Calculate
+                    Calculate Review Time
                 </button>
 
                 <div class="grid md:grid-cols-3 gap-6 pt-4 border-t">
@@ -97,7 +99,65 @@
             </div>
         </div>
         
-         <div class="text-center mt-8 pt-8 border-t">
+        <!-- Date Calculators -->
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Calculator 1: Find Needed Back Date -->
+            <div class="calculator-card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">1. Calculate Needed Back Date</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="submit-date" class="block text-sm font-medium text-gray-700">If I submit on...</label>
+                        <input type="date" id="submit-date" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                    </div>
+                    <button id="calculate-needed-by-btn" class="w-full btn-brand font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">
+                        Calculate Needed Back Date
+                    </button>
+                    <div>
+                        <p class="text-sm text-gray-600">You should get it back by:</p>
+                        <p id="needed-by-date-result" class="text-lg font-bold text-brand h-8 flex items-center"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calculator 2: Find Submit By Date -->
+            <div class="calculator-card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">2. Calculate "Submit By" Date</h2>
+                 <div class="space-y-4">
+                    <div>
+                        <label for="needed-back-date" class="block text-sm font-medium text-gray-700">I need it back by...</label>
+                        <input type="date" id="needed-back-date" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                    </div>
+                    <button id="calculate-submit-by-btn" class="w-full bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition">
+                        Calculate "Submit By" Deadline
+                    </button>
+                    <div>
+                        <p class="text-sm text-gray-600">You need to submit by:</p>
+                        <p id="submit-by-date-result" class="text-lg font-bold text-gray-700 h-8 flex items-center"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guidelines Table -->
+        <div class="calculator-card">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 text-center">Processing Time Guidelines</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr>
+                            <th class="p-3 text-sm font-semibold text-gray-700 border-b">Project Size</th>
+                            <th class="p-3 text-sm font-semibold text-gray-700 border-b">Engineering Hours</th>
+                            <th class="p-3 text-sm font-semibold text-gray-700 border-b">Duration (Business Days)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="guidelines-table-body">
+                        <tr><td colspan="3" class="text-center p-4 text-gray-500">Loading guidelines...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="text-center mt-8 pt-8 border-t">
             <a href="index.html" class="inline-block bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-lg hover:bg-gray-300 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
                 Go to Procurement Lead Time Calculator
             </a>
@@ -110,6 +170,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Main Calculator Elements
             const engineeringHoursInput = document.getElementById('engineering-hours');
             const calculateBtn = document.getElementById('calculate-btn');
             const projectSizeResult = document.getElementById('project-size-result');
@@ -117,9 +178,39 @@
             const qaqcScoreResult = document.getElementById('qaqc-score-result');
             const lastUpdatedElement = document.getElementById('last-updated');
             const discussionNote = document.getElementById('discussion-note');
+            
+            // Date Calculator Elements
+            const submitDateInput = document.getElementById('submit-date');
+            const calculateNeededByBtn = document.getElementById('calculate-needed-by-btn');
+            const neededByDateResult = document.getElementById('needed-by-date-result');
+            const neededBackDateInput = document.getElementById('needed-back-date');
+            const calculateSubmitByBtn = document.getElementById('calculate-submit-by-btn');
+            const submitByDateResult = document.getElementById('submit-by-date-result');
+
+            // Guidelines Table
+            const guidelinesTableBody = document.getElementById('guidelines-table-body');
+
             const googleSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdpYw6MNdXxL_H19JD8vJzNbKakS4eh2rud1QyidT4sN92xgjVtced3Y9FgjLMkMPD_dG6t6spqfMy/pub?output=csv';
 
             let guidelines = [];
+            let activeReviewDays = null; // To store the result from the main calculator
+
+            function renderGuidelinesTable(guidelineData) {
+                guidelinesTableBody.innerHTML = '';
+                if (guidelineData.length === 0) {
+                     guidelinesTableBody.innerHTML = '<tr><td colspan="3" class="text-center p-4 text-gray-500">No guidelines found.</td></tr>';
+                     return;
+                }
+                guidelineData.forEach(g => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="p-3 border-b border-gray-200">${g.size}</td>
+                        <td class="p-3 border-b border-gray-200">${g.minHours.toLocaleString()} - ${g.maxHours.toLocaleString()}</td>
+                        <td class="p-3 border-b border-gray-200">${g.days}</td>
+                    `;
+                    guidelinesTableBody.appendChild(row);
+                });
+            }
 
             async function fetchGuidelines() {
                 try {
@@ -150,13 +241,11 @@
                             days: parseInt(columns[3].trim(), 10),
                         };
                     });
+                    
+                    renderGuidelinesTable(guidelines);
 
                     if (mostRecentDate) {
-                         const formattedDate = mostRecentDate.toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                        });
+                         const formattedDate = mostRecentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
                         lastUpdatedElement.textContent = `Guidelines last updated on: ${formattedDate}`;
                     } else {
                         lastUpdatedElement.textContent = `Processing guidelines are managed live via Google Sheets.`;
@@ -166,76 +255,91 @@
                     console.error('Failed to load guidelines:', error);
                     projectSizeResult.textContent = 'Error';
                     lastUpdatedElement.textContent = `Error: Could not load guideline data. ${error.message}`;
+                    guidelinesTableBody.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-red-500">Failed to load data.</td></tr>`;
                 }
             }
 
-
-            // Based on the image provided for QAQC Duration
             const qaqcScores = {
                 'S': { 31: 5, 28: 4, 26: 3, 23: 2, 20: 1 },
                 'M': { 61: 5, 56: 4, 52: 3, 48: 2, 44: 1 },
                 'L': { 76: 5, 70: 4, 65: 3, 60: 2, 55: 1 },
                 'XL': { 92: 5, 84: 4, 77: 3, 70: 2, 63: 1 },
-                '2XL': { 'default': 4 }, // Simplified based on the "84+ days"
-                '3XL': { 'default': 4 },
-                '4XL': { 'default': 4 },
+                '2XL': { 'default': 4 }, '3XL': { 'default': 4 }, '4XL': { 'default': 4 },
             };
 
             function getQaqcScore(sizeKey, reviewDays) {
                 if (!qaqcScores[sizeKey]) return 'N/A';
-
                 const scoreMap = qaqcScores[sizeKey];
-                 if(scoreMap.default) return scoreMap.default;
-
+                if(scoreMap.default) return scoreMap.default;
                 const sortedDays = Object.keys(scoreMap).map(Number).sort((a, b) => b - a);
-
                 for (const days of sortedDays) {
-                    if (reviewDays >= days) {
-                        return scoreMap[days];
+                    if (reviewDays >= days) return scoreMap[days];
+                }
+                return 1;
+            }
+            
+            function formatDate(date) {
+                if (!date || isNaN(date)) return 'Invalid Date';
+                return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+            }
+
+            function addBusinessDays(startDate, days) {
+                let currentDate = new Date(startDate.getTime());
+                let daysAdded = 0;
+                while (daysAdded < days) {
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    const dayOfWeek = currentDate.getDay();
+                    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // 0 = Sunday, 6 = Saturday
+                        daysAdded++;
                     }
                 }
-                return 1; // Return lowest score if below all thresholds
+                return currentDate;
+            }
+
+            function subtractBusinessDays(startDate, days) {
+                let currentDate = new Date(startDate.getTime());
+                let daysSubtracted = 0;
+                while (daysSubtracted < days) {
+                    currentDate.setDate(currentDate.getDate() - 1);
+                    const dayOfWeek = currentDate.getDay();
+                    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                        daysSubtracted++;
+                    }
+                }
+                return currentDate;
             }
 
             function calculate() {
                 const hours = parseInt(engineeringHoursInput.value, 10);
                 discussionNote.style.display = 'none';
-                qaqcScoreResult.className = 'result-box-value'; // Reset classes
-
+                qaqcScoreResult.className = 'result-box-value'; 
+                activeReviewDays = null; // Reset on each calculation
 
                 if (isNaN(hours) || hours <= 0) {
-                    projectSizeResult.textContent = '';
-                    reviewTimeResult.textContent = '';
-                    qaqcScoreResult.textContent = '';
+                    projectSizeResult.textContent = ''; reviewTimeResult.textContent = ''; qaqcScoreResult.textContent = '';
                     return;
                 }
 
                 const guideline = guidelines.find(g => hours >= g.minHours && hours <= g.maxHours);
 
                 if (guideline) {
+                    activeReviewDays = guideline.days; // Store days for date calculators
                     projectSizeResult.textContent = guideline.size;
-                    
                     const weeks = guideline.days / 5;
                     reviewTimeResult.innerHTML = `<span class="block">${guideline.days} days</span><span class="text-base font-normal text-gray-500">(${weeks.toFixed(1)} wks)</span>`;
                     
-                    // Special condition for the discussion note
-                    if (hours > 10000 || guideline.days >= 60) { // 12 weeks * 5 days/week = 60 days
+                    if (hours > 10000 || guideline.days >= 60) {
                          discussionNote.textContent = 'Any project with MORE than 10,001 Engineering Hours and/or 12+ Weeks will require a discussion.';
                          discussionNote.style.display = 'block';
                     }
                     
-                    // Score Calculation
                     let sizeKey = guideline.size.replace(' Projects', '').substring(0, 3).trim();
                     if(sizeKey === 'Sma') sizeKey = 'S';
                     if(sizeKey === 'Med') sizeKey = 'M';
                     if(sizeKey === 'Lar') sizeKey = 'L';
-
-                    const reviewDays = guideline.days; // Use days directly from the sheet
-                    const score = getQaqcScore(sizeKey, reviewDays);
-                    
+                    const score = getQaqcScore(sizeKey, guideline.days);
                     qaqcScoreResult.textContent = score;
                     qaqcScoreResult.classList.add(`score-${score}`);
-
                 } else {
                     projectSizeResult.textContent = 'N/A';
                     reviewTimeResult.textContent = 'N/A';
@@ -244,10 +348,42 @@
             }
 
             calculateBtn.addEventListener('click', calculate);
-            engineeringHoursInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    calculate();
+            engineeringHoursInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') calculate(); });
+            
+            calculateNeededByBtn.addEventListener('click', () => {
+                neededByDateResult.classList.remove('text-red-500');
+                if (activeReviewDays === null) {
+                    neededByDateResult.textContent = 'Calc review time first.';
+                    neededByDateResult.classList.add('text-red-500');
+                    return;
                 }
+                const submitDateStr = submitDateInput.value;
+                if (!submitDateStr) {
+                    neededByDateResult.textContent = 'Select submit date.';
+                    neededByDateResult.classList.add('text-red-500');
+                    return;
+                }
+                const submitDate = new Date(submitDateStr + 'T00:00:00Z');
+                const neededByDate = addBusinessDays(submitDate, activeReviewDays);
+                neededByDateResult.textContent = formatDate(neededByDate);
+            });
+            
+            calculateSubmitByBtn.addEventListener('click', () => {
+                submitByDateResult.classList.remove('text-red-500');
+                if (activeReviewDays === null) {
+                    submitByDateResult.textContent = 'Calc review time first.';
+                    submitByDateResult.classList.add('text-red-500');
+                    return;
+                }
+                const neededBackDateStr = neededBackDateInput.value;
+                 if (!neededBackDateStr) {
+                    submitByDateResult.textContent = 'Select needed date.';
+                    submitByDateResult.classList.add('text-red-500');
+                    return;
+                }
+                const neededBackDate = new Date(neededBackDateStr + 'T00:00:00Z');
+                const submitByDate = subtractBusinessDays(neededBackDate, activeReviewDays);
+                submitByDateResult.textContent = formatDate(submitByDate);
             });
             
             fetchGuidelines();
