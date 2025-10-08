@@ -64,7 +64,7 @@
             </div>
             
             <div id="ifm-link-container" class="text-center border-t pt-4" style="display: none;">
-                </div>
+            </div>
 
             <div>
                 <label for="delivery-date" class="block text-sm font-medium text-gray-700">Final Delivery Date</label>
@@ -76,7 +76,7 @@
         </div>
 
         <div id="results-container" class="calculator-card mt-8" style="display: none;">
-            </div>
+        </div>
         
         <footer class="text-center mt-8">
             <a href="https://das-madison-procurement.github.io/github.io/index.html" class="text-gray-600 hover:text-brand font-medium transition">
@@ -179,6 +179,8 @@
                         const weeks = parseInt((columns[2] || '').trim(), 10);
                         const link = (columns[3] || '').trim().replace(/"/g, '');
                         const lastEdited = (columns[4] || '').trim().replace(/"/g, '');
+                        // *** MODIFIED: Read the 6th column for the warning flag ***
+                        const warning = (columns[5] || '').trim().replace(/"/g, '');
 
                         if (lastEdited) {
                             const currentDate = new Date(lastEdited);
@@ -193,7 +195,12 @@
                             if (!milestoneData[material]) {
                                 milestoneData[material] = { milestones: [], link: null };
                             }
-                            milestoneData[material].milestones.push({ milestone, weeks });
+                            // *** MODIFIED: Create an object and add the warning flag if it exists ***
+                            const milestoneObject = { milestone, weeks };
+                            if (warning) {
+                                milestoneObject.hasWarning = true;
+                            }
+                            milestoneData[material].milestones.push(milestoneObject);
                             
                             if (link && !milestoneData[material].link) {
                                 milestoneData[material].link = link;
@@ -248,26 +255,26 @@
                 sortedMilestones.forEach(item => {
                     const deadline = new Date(deliveryDate.getTime());
                     deadline.setDate(deadline.getDate() - (item.weeks * 7));
-                    // *** MODIFIED: Pass the weeks value to the append function
-                    appendResult(item.milestone, deadline, item.weeks);
+                    // *** MODIFIED: Pass the warning flag to the append function ***
+                    appendResult(item.milestone, deadline, item.weeks, item.hasWarning);
                 });
 
                 resultsContainer.style.display = 'block';
             }
 
-            // *** MODIFIED: Function now accepts 'weeks' and displays it ***
-            function appendResult(description, date, weeks) {
+            // *** MODIFIED: Function now accepts 'hasWarning' and displays a message if true ***
+            function appendResult(description, date, weeks, hasWarning) {
                 const resultItem = document.createElement('div');
-                resultItem.className = 'result-item flex justify-between items-center';
+                resultItem.className = 'result-item flex justify-between items-center flex-wrap';
                 
-                // Container for the left side (description and weeks)
+                // Container for the left side (description, weeks, and warning)
                 const leftContainer = document.createElement('div');
+                leftContainer.className = 'flex-grow pr-4';
 
                 const milestoneText = document.createElement('p');
                 milestoneText.className = 'text-gray-700';
                 milestoneText.textContent = description;
                 
-                // New element for the weeks text
                 const weeksText = document.createElement('p');
                 weeksText.className = 'text-sm text-gray-500 italic';
                 weeksText.textContent = `(${weeks} weeks prior to delivery)`;
@@ -275,9 +282,30 @@
                 leftContainer.appendChild(milestoneText);
                 leftContainer.appendChild(weeksText);
 
+                // If the item has a warning, create and append the warning message
+                if (hasWarning) {
+                    const warningContainer = document.createElement('div');
+                    warningContainer.className = 'mt-2 flex items-center text-xs text-amber-800 bg-amber-100 p-2 rounded-md';
+
+                    // Warning Icon SVG
+                    const warningIconHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 flex-shrink-0">
+                            <path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                            <path d="M12 9v4"></path><path d="M12 17h.01"></path>
+                        </svg>`;
+                    
+                    const warningText = document.createElement('span');
+                    warningText.textContent = 'Note: This timeframe uses the CAET delivery date, not the final site delivery date.';
+                    
+                    warningContainer.innerHTML = warningIconHTML;
+                    warningContainer.appendChild(warningText);
+                    leftContainer.appendChild(warningContainer);
+                }
+
+
                 // Element for the date on the right side
                 const milestoneDate = document.createElement('p');
-                milestoneDate.className = 'text-lg font-bold text-brand';
+                milestoneDate.className = 'text-lg font-bold text-brand text-right flex-shrink-0';
                 milestoneDate.textContent = formatDate(date);
 
                 resultItem.appendChild(leftContainer);
@@ -292,4 +320,3 @@
     </script>
 </body>
 </html>
-
