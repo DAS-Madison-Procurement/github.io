@@ -159,6 +159,27 @@
                     ifmLinkContainer.style.display = 'none';
                 }
             }
+            
+            // *** NEW: Robust CSV row parser to handle commas within fields ***
+            function parseCsvRow(row) {
+                const result = [];
+                let currentField = '';
+                let inQuotedField = false;
+                for (let i = 0; i < row.length; i++) {
+                    const char = row[i];
+                    if (char === '"' && (i === 0 || row[i-1] !== '\\')) {
+                         inQuotedField = !inQuotedField;
+                    } else if (char === ',' && !inQuotedField) {
+                        result.push(currentField.trim());
+                        currentField = '';
+                    } else {
+                        currentField += char;
+                    }
+                }
+                result.push(currentField.trim());
+                return result.map(field => field.replace(/^"|"$/g, ''));
+            }
+
 
             async function populateMaterials() {
                 materialSelect.disabled = true;
@@ -173,14 +194,14 @@
                     let mostRecentDate = null;
 
                     rows.forEach(row => {
-                        const columns = row.split(',');
-                        const material = (columns[0] || '').trim().replace(/"/g, '');
-                        const milestone = (columns[1] || '').trim().replace(/"/g, '');
+                        // *** MODIFIED: Use the new robust parser ***
+                        const columns = parseCsvRow(row);
+                        const material = (columns[0] || '').trim();
+                        const milestone = (columns[1] || '').trim();
                         const weeks = parseInt((columns[2] || '').trim(), 10);
-                        const link = (columns[3] || '').trim().replace(/"/g, '');
-                        const lastEdited = (columns[4] || '').trim().replace(/"/g, '');
-                        // *** MODIFIED: Read the 6th column for the warning flag ***
-                        const warning = (columns[5] || '').trim().replace(/"/g, '');
+                        const link = (columns[3] || '').trim();
+                        const lastEdited = (columns[4] || '').trim();
+                        const warning = (columns[5] || '').trim();
 
                         if (lastEdited) {
                             const currentDate = new Date(lastEdited);
@@ -195,9 +216,9 @@
                             if (!milestoneData[material]) {
                                 milestoneData[material] = { milestones: [], link: null };
                             }
-                            // *** MODIFIED: Create an object and add the warning flag if it exists ***
                             const milestoneObject = { milestone, weeks };
-                            if (warning) {
+                            // *** MODIFIED: Check for a truthy value like "TRUE" ***
+                            if (warning && warning.toUpperCase() === 'TRUE') {
                                 milestoneObject.hasWarning = true;
                             }
                             milestoneData[material].milestones.push(milestoneObject);
@@ -255,19 +276,16 @@
                 sortedMilestones.forEach(item => {
                     const deadline = new Date(deliveryDate.getTime());
                     deadline.setDate(deadline.getDate() - (item.weeks * 7));
-                    // *** MODIFIED: Pass the warning flag to the append function ***
                     appendResult(item.milestone, deadline, item.weeks, item.hasWarning);
                 });
 
                 resultsContainer.style.display = 'block';
             }
 
-            // *** MODIFIED: Function now accepts 'hasWarning' and displays a message if true ***
             function appendResult(description, date, weeks, hasWarning) {
                 const resultItem = document.createElement('div');
                 resultItem.className = 'result-item flex justify-between items-center flex-wrap';
                 
-                // Container for the left side (description, weeks, and warning)
                 const leftContainer = document.createElement('div');
                 leftContainer.className = 'flex-grow pr-4';
 
@@ -282,12 +300,10 @@
                 leftContainer.appendChild(milestoneText);
                 leftContainer.appendChild(weeksText);
 
-                // If the item has a warning, create and append the warning message
                 if (hasWarning) {
                     const warningContainer = document.createElement('div');
                     warningContainer.className = 'mt-2 flex items-center text-xs text-amber-800 bg-amber-100 p-2 rounded-md';
 
-                    // Warning Icon SVG
                     const warningIconHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 flex-shrink-0">
                             <path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
@@ -302,8 +318,6 @@
                     leftContainer.appendChild(warningContainer);
                 }
 
-
-                // Element for the date on the right side
                 const milestoneDate = document.createElement('p');
                 milestoneDate.className = 'text-lg font-bold text-brand text-right flex-shrink-0';
                 milestoneDate.textContent = formatDate(date);
@@ -320,3 +334,4 @@
     </script>
 </body>
 </html>
+
