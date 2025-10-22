@@ -41,6 +41,23 @@
          #results-container .result-item:first-child {
             padding-top: 0;
          }
+         /* NEW: Style for the primary calculated result */
+         #results-container .result-item-primary {
+            background-color: #f0fdf4; /* Light green */
+            border: 1px solid #bbf7d0; /* Green border */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+         }
+         .toggle-link {
+            color: #a1805b;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.875rem;
+         }
+         .toggle-link:hover {
+            color: #8f7150;
+         }
     </style>
 </head>
 <body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
@@ -50,7 +67,7 @@
             <img src="logo.png" alt="Dashiell Corp Logo" class="h-20 w-auto" onerror="this.style.display='none'">
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">FirstEnergy Issue for Milestone (IFM) Calculator</h1>
-                <p class="text-gray-600 mt-1">Select a material and delivery date to see milestone deadlines.</p>
+                <p class="text-gray-600 mt-1">Select a material and date to see milestone deadlines.</p>
                 <p id="last-updated" class="text-sm text-gray-500 mt-2"></p>
             </div>
         </div>
@@ -66,12 +83,37 @@
             <div id="ifm-link-container" class="text-center border-t pt-4" style="display: none;">
             </div>
 
-            <div>
-                <label for="delivery-date" class="block text-sm font-medium text-gray-700">Final Delivery Date</label>
-                <input type="date" id="delivery-date" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+            <div id="standard-calculator-inputs" class="space-y-6">
+                <div>
+                    <label for="delivery-date" class="block text-sm font-medium text-gray-700">Final Delivery Date</label>
+                    <input type="date" id="delivery-date" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                </div>
             </div>
+
+            <div id="reverse-calculator-inputs" class="space-y-6" style="display: none;">
+                <div>
+                    <label for="milestone-select" class="block text-sm font-medium text-gray-700">Known Milestone</label>
+                    <select id="milestone-select" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                        <option>Select material first...</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="milestone-date" class="block text-sm font-medium text-gray-700">Known Milestone Date</label>
+                    <input type="date" id="milestone-date" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                </div>
+            </div>
+            
+            <div class="text-center pt-2">
+                 <a id="toggle-to-reverse" class="toggle-link">
+                    Know a milestone date instead? Calculate from a known milestone.
+                 </a>
+                 <a id="toggle-to-standard" class="toggle-link" style="display: none;">
+                    Want to calculate from the Final Delivery Date?
+                 </a>
+            </div>
+
             <button id="calculate-btn" class="w-full btn-brand font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">
-                Calculate Standard Milestones
+                Calculate From Final Delivery
             </button>
         </div>
 
@@ -87,8 +129,8 @@
 
     <div id="error-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-start justify-center z-50 p-4 pt-20" style="display: none;">
         <div class="bg-white p-6 rounded-lg shadow-xl text-center w-full max-w-sm">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Input Required</h3>
-            <p class="text-sm text-gray-600 mb-6">Please select a final delivery date to continue.</p>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Missing Information</h3>
+            <p id="modal-error-text" class="text-sm text-gray-600 mb-6">Please fill out all required fields.</p>
             <button id="modal-ok-btn" class="btn-brand font-semibold py-2 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">OK</button>
         </div>
     </div>
@@ -104,9 +146,18 @@
             const lastUpdatedElement = document.getElementById('last-updated');
             const ifmLinkContainer = document.getElementById('ifm-link-container');
 
+            // *** NEW: Get elements for reverse calculator ***
+            const standardInputs = document.getElementById('standard-calculator-inputs');
+            const reverseInputs = document.getElementById('reverse-calculator-inputs');
+            const toggleToReverse = document.getElementById('toggle-to-reverse');
+            const toggleToStandard = document.getElementById('toggle-to-standard');
+            const milestoneSelect = document.getElementById('milestone-select');
+            const milestoneDateInput = document.getElementById('milestone-date');
+
             // Modal elements
             const errorModal = document.getElementById('error-modal');
             const modalOkBtn = document.getElementById('modal-ok-btn');
+            const modalErrorText = document.getElementById('modal-error-text'); // *** NEW
             
             let milestoneData = {};
 
@@ -120,7 +171,9 @@
                 });
             };
 
-            const showDateErrorModal = () => {
+            // *** MODIFIED: Error modal now accepts a message ***
+            const showErrorModal = (message) => {
+                modalErrorText.textContent = message;
                 errorModal.style.display = 'flex';
             };
             
@@ -160,7 +213,28 @@
                 }
             }
             
-            // *** NEW: Robust CSV row parser to handle commas within fields ***
+            // *** NEW: Function to populate the "Known Milestone" dropdown ***
+            function updateMilestoneSelector() {
+                const selectedMaterial = materialSelect.value;
+                const data = milestoneData[selectedMaterial];
+                milestoneSelect.innerHTML = ''; // Clear old options
+
+                if (data && data.milestones) {
+                    // Sort milestones alphabetically for the dropdown
+                    const sortedMilestones = [...data.milestones].sort((a, b) => a.milestone.localeCompare(b.milestone));
+                    
+                    sortedMilestones.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.weeks; // Store weeks in the value
+                        option.textContent = item.milestone;
+                        milestoneSelect.appendChild(option);
+                    });
+                } else {
+                    milestoneSelect.innerHTML = '<option>No milestones found</option>';
+                }
+            }
+
+            // Robust CSV row parser (no changes)
             function parseCsvRow(row) {
                 const result = [];
                 let currentField = '';
@@ -194,7 +268,6 @@
                     let mostRecentDate = null;
 
                     rows.forEach(row => {
-                        // *** MODIFIED: Use the new robust parser ***
                         const columns = parseCsvRow(row);
                         const material = (columns[0] || '').trim();
                         const milestone = (columns[1] || '').trim();
@@ -217,7 +290,6 @@
                                 milestoneData[material] = { milestones: [], link: null };
                             }
                             const milestoneObject = { milestone, weeks };
-                            // *** MODIFIED: Check for a truthy value like "TRUE" ***
                             if (warning && warning.toUpperCase() === 'TRUE') {
                                 milestoneObject.hasWarning = true;
                             }
@@ -247,6 +319,7 @@
                     });
                     
                     updateIfmLink();
+                    updateMilestoneSelector(); // *** NEW: Initial population of reverse calculator dropdown
 
                 } catch (error) {
                     console.error('Error:', error);
@@ -257,10 +330,36 @@
                 }
             }
 
-            function calculateAndDisplayMilestones() {
+            // *** NEW: Function to handle switching between calculator modes ***
+            function setupToggles() {
+                toggleToReverse.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    standardInputs.style.display = 'none';
+                    reverseInputs.style.display = 'block';
+                    toggleToReverse.style.display = 'none';
+                    toggleToStandard.style.display = 'block';
+                    calculateBtn.textContent = 'Calculate From Known Milestone';
+                    resultsContainer.style.display = 'none';
+                    resultsContainer.innerHTML = '';
+                });
+                
+                toggleToStandard.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    standardInputs.style.display = 'block';
+                    reverseInputs.style.display = 'none';
+                    toggleToReverse.style.display = 'block';
+                    toggleToStandard.style.display = 'none';
+                    calculateBtn.textContent = 'Calculate From Final Delivery';
+                    resultsContainer.style.display = 'none';
+                    resultsContainer.innerHTML = '';
+                });
+            }
+
+            // *** REFACTORED: Original logic moved to its own function ***
+            function calculateStandard() {
                 const deliveryDateStr = deliveryDateInput.value;
                 if (!deliveryDateStr) {
-                    showDateErrorModal();
+                    showErrorModal('Please select a final delivery date.');
                     return;
                 }
                 
@@ -281,7 +380,68 @@
 
                 resultsContainer.style.display = 'block';
             }
+            
+            // *** NEW: Function to handle the reverse calculation ***
+            function calculateReverse() {
+                const knownDateStr = milestoneDateInput.value;
+                const knownWeeks = parseInt(milestoneSelect.value, 10);
+                const selectedMaterial = materialSelect.value;
+                
+                if (!knownDateStr || isNaN(knownWeeks)) {
+                    showErrorModal('Please select a known milestone and its date.');
+                    return;
+                }
 
+                resultsContainer.innerHTML = ''; // Clear previous results
+                const data = milestoneData[selectedMaterial];
+                if (!data || !data.milestones) return;
+
+                const knownDate = new Date(knownDateStr + 'T00:00:00Z');
+                
+                // 1. Calculate the Final Delivery Date
+                const finalDeliveryDate = new Date(knownDate.getTime());
+                finalDeliveryDate.setDate(finalDeliveryDate.getDate() + (knownWeeks * 7));
+                
+                // 2. Display the Final Delivery Date as the primary result
+                appendPrimaryResult('Calculated Final Delivery Date', finalDeliveryDate);
+                
+                // 3. Calculate and display all other milestones based on the new Final Delivery Date
+                const sortedMilestones = [...data.milestones].sort((a, b) => b.weeks - a.weeks);
+                
+                sortedMilestones.forEach(item => {
+                    const deadline = new Date(finalDeliveryDate.getTime());
+                    deadline.setDate(deadline.getDate() - (item.weeks * 7));
+                    appendResult(item.milestone, deadline, item.weeks, item.hasWarning);
+                });
+
+                resultsContainer.style.display = 'block';
+            }
+
+            // *** NEW: Special function to highlight the main calculated date ***
+            function appendPrimaryResult(description, date) {
+                const resultItem = document.createElement('div');
+                // Use a special class for primary result
+                resultItem.className = 'result-item-primary flex justify-between items-center flex-wrap';
+                
+                const leftContainer = document.createElement('div');
+                leftContainer.className = 'pr-4';
+
+                const milestoneText = document.createElement('p');
+                milestoneText.className = 'text-lg font-semibold text-green-800';
+                milestoneText.textContent = description;
+                
+                leftContainer.appendChild(milestoneText);
+
+                const milestoneDate = document.createElement('p');
+                milestoneDate.className = 'text-xl font-bold text-green-800 text-right flex-shrink-0';
+                milestoneDate.textContent = formatDate(date);
+
+                resultItem.appendChild(leftContainer);
+                resultItem.appendChild(milestoneDate);
+                resultsContainer.appendChild(resultItem);
+            }
+
+            // *** MODIFIED: Renamed 'appendResult' (no other changes to this function) ***
             function appendResult(description, date, weeks, hasWarning) {
                 const resultItem = document.createElement('div');
                 resultItem.className = 'result-item flex justify-between items-center flex-wrap';
@@ -327,11 +487,28 @@
                 resultsContainer.appendChild(resultItem);
             }
             
-            materialSelect.addEventListener('change', updateIfmLink);
-            calculateBtn.addEventListener('click', calculateAndDisplayMilestones);
+            // *** MODIFIED: Add event listener to update both link and new dropdown ***
+            materialSelect.addEventListener('change', () => {
+                updateIfmLink();
+                updateMilestoneSelector();
+                resultsContainer.style.display = 'none'; // Hide results when material changes
+                resultsContainer.innerHTML = '';
+            });
+
+            // *** MODIFIED: Main calculate button now checks which mode is active ***
+            calculateBtn.addEventListener('click', () => {
+                // Check which input section is visible
+                if (standardInputs.style.display !== 'none') {
+                    calculateStandard();
+                } else {
+                    calculateReverse();
+                }
+            });
+
+            // Initial setup
             populateMaterials();
+            setupToggles(); // *** NEW: Set up the toggle listeners
         });
     </script>
 </body>
 </html>
-
