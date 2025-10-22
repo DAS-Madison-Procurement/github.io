@@ -39,15 +39,24 @@
             padding-bottom: 0;
         }
          #results-container .result-item:first-child {
+            /* This style is overridden by the primary-result-first-child, which is fine */
             padding-top: 0;
          }
-         /* NEW: Style for the primary calculated result */
+         /* Style for the primary calculated result */
          #results-container .result-item-primary {
             background-color: #f0fdf4; /* Light green */
             border: 1px solid #bbf7d0; /* Green border */
             padding: 1rem;
             border-radius: 0.5rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem; /* Space between primary results */
+         }
+         /* Remove bottom margin from the last primary result */
+         #results-container .result-item-primary:last-of-type {
+            margin-bottom: 0;
+         }
+         /* Fix padding for the first result when it's NOT primary */
+         #results-container > .result-item:first-child {
+             padding-top: 0;
          }
          .toggle-link {
             color: #a1805b;
@@ -83,6 +92,7 @@
             <div id="ifm-link-container" class="text-center border-t pt-4" style="display: none;">
             </div>
 
+            <!-- Container for Standard Calculator (Original) -->
             <div id="standard-calculator-inputs" class="space-y-6">
                 <div>
                     <label for="delivery-date" class="block text-sm font-medium text-gray-700">Final Delivery Date</label>
@@ -90,6 +100,7 @@
                 </div>
             </div>
 
+            <!-- Container for Reverse Calculator (Your Request) -->
             <div id="reverse-calculator-inputs" class="space-y-6" style="display: none;">
                 <div>
                     <label for="milestone-select" class="block text-sm font-medium text-gray-700">Known Milestone</label>
@@ -103,6 +114,7 @@
                 </div>
             </div>
             
+            <!-- Toggle links -->
             <div class="text-center pt-2">
                  <a id="toggle-to-reverse" class="toggle-link">
                     Know a milestone date instead? Calculate from a known milestone.
@@ -112,6 +124,7 @@
                  </a>
             </div>
 
+            <!-- Button text is more generic, will be updated by JS -->
             <button id="calculate-btn" class="w-full btn-brand font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">
                 Calculate From Final Delivery
             </button>
@@ -127,6 +140,7 @@
         </footer>
     </div>
 
+    <!-- Error modal is more generic -->
     <div id="error-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-start justify-center z-50 p-4 pt-20" style="display: none;">
         <div class="bg-white p-6 rounded-lg shadow-xl text-center w-full max-w-sm">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Missing Information</h3>
@@ -146,7 +160,7 @@
             const lastUpdatedElement = document.getElementById('last-updated');
             const ifmLinkContainer = document.getElementById('ifm-link-container');
 
-            // *** NEW: Get elements for reverse calculator ***
+            // Get elements for reverse calculator
             const standardInputs = document.getElementById('standard-calculator-inputs');
             const reverseInputs = document.getElementById('reverse-calculator-inputs');
             const toggleToReverse = document.getElementById('toggle-to-reverse');
@@ -157,7 +171,7 @@
             // Modal elements
             const errorModal = document.getElementById('error-modal');
             const modalOkBtn = document.getElementById('modal-ok-btn');
-            const modalErrorText = document.getElementById('modal-error-text'); // *** NEW
+            const modalErrorText = document.getElementById('modal-error-text');
             
             let milestoneData = {};
 
@@ -171,7 +185,7 @@
                 });
             };
 
-            // *** MODIFIED: Error modal now accepts a message ***
+            // Error modal now accepts a message
             const showErrorModal = (message) => {
                 modalErrorText.textContent = message;
                 errorModal.style.display = 'flex';
@@ -213,7 +227,7 @@
                 }
             }
             
-            // *** NEW: Function to populate the "Known Milestone" dropdown ***
+            // Function to populate the "Known Milestone" dropdown
             function updateMilestoneSelector() {
                 const selectedMaterial = materialSelect.value;
                 const data = milestoneData[selectedMaterial];
@@ -234,7 +248,7 @@
                 }
             }
 
-            // Robust CSV row parser (no changes)
+            // Robust CSV row parser
             function parseCsvRow(row) {
                 const result = [];
                 let currentField = '';
@@ -275,6 +289,8 @@
                         const link = (columns[3] || '').trim();
                         const lastEdited = (columns[4] || '').trim();
                         const warning = (columns[5] || '').trim();
+                        // *** NEW: Read the 7th column (index 6) for lead time ***
+                        const leadTime = parseInt((columns[6] || '').trim(), 10);
 
                         if (lastEdited) {
                             const currentDate = new Date(lastEdited);
@@ -287,7 +303,8 @@
 
                         if (material && milestone && !isNaN(weeks)) {
                             if (!milestoneData[material]) {
-                                milestoneData[material] = { milestones: [], link: null };
+                                // *** NEW: Add leadTimeWeeks property ***
+                                milestoneData[material] = { milestones: [], link: null, leadTimeWeeks: null };
                             }
                             const milestoneObject = { milestone, weeks };
                             if (warning && warning.toUpperCase() === 'TRUE') {
@@ -297,6 +314,11 @@
                             
                             if (link && !milestoneData[material].link) {
                                 milestoneData[material].link = link;
+                            }
+
+                            // *** NEW: Store the lead time. Assumes first valid number found is correct for the material. ***
+                            if (!isNaN(leadTime) && milestoneData[material].leadTimeWeeks === null) {
+                                milestoneData[material].leadTimeWeeks = leadTime;
                             }
                         }
                     });
@@ -319,7 +341,7 @@
                     });
                     
                     updateIfmLink();
-                    updateMilestoneSelector(); // *** NEW: Initial population of reverse calculator dropdown
+                    updateMilestoneSelector(); // Initial population of reverse calculator dropdown
 
                 } catch (error) {
                     console.error('Error:', error);
@@ -330,7 +352,7 @@
                 }
             }
 
-            // *** NEW: Function to handle switching between calculator modes ***
+            // Function to handle switching between calculator modes
             function setupToggles() {
                 toggleToReverse.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -355,7 +377,7 @@
                 });
             }
 
-            // *** REFACTORED: Original logic moved to its own function ***
+            // *** MODIFIED: Standard calculation now also shows Order By Date ***
             function calculateStandard() {
                 const deliveryDateStr = deliveryDateInput.value;
                 if (!deliveryDateStr) {
@@ -370,6 +392,21 @@
                 
                 const deliveryDate = new Date(deliveryDateStr + 'T00:00:00Z');
                 
+                // *** NEW: Calculate and show Order By Date first ***
+                if (data.leadTimeWeeks) {
+                    const orderDate = new Date(deliveryDate.getTime());
+                    orderDate.setDate(orderDate.getDate() - (data.leadTimeWeeks * 7));
+                    appendPrimaryResult(
+                        'Calculated Order By Date',
+                        orderDate,
+                        data.leadTimeWeeks
+                    );
+                     // Add a visual separator
+                    const separator = document.createElement('hr');
+                    separator.className = 'my-6 border-gray-300';
+                    resultsContainer.appendChild(separator);
+                }
+                
                 const sortedMilestones = [...data.milestones].sort((a, b) => b.weeks - a.weeks);
 
                 sortedMilestones.forEach(item => {
@@ -381,7 +418,7 @@
                 resultsContainer.style.display = 'block';
             }
             
-            // *** NEW: Function to handle the reverse calculation ***
+            // *** MODIFIED: Function now correctly finds and highlights the Order Date based on lead time ***
             function calculateReverse() {
                 const knownDateStr = milestoneDateInput.value;
                 const knownWeeks = parseInt(milestoneSelect.value, 10);
@@ -405,9 +442,26 @@
                 // 2. Display the Final Delivery Date as the primary result
                 appendPrimaryResult('Calculated Final Delivery Date', finalDeliveryDate);
                 
+                // *** MODIFIED: Use the leadTimeWeeks data to calculate order date ***
+                if (data.leadTimeWeeks) {
+                    const orderDate = new Date(finalDeliveryDate.getTime());
+                    orderDate.setDate(orderDate.getDate() - (data.leadTimeWeeks * 7));
+                    // Display this as a second primary result
+                    appendPrimaryResult(
+                        'Calculated Order By Date',
+                        orderDate, 
+                        data.leadTimeWeeks
+                    );
+                }
+                
                 // 3. Calculate and display all other milestones based on the new Final Delivery Date
                 const sortedMilestones = [...data.milestones].sort((a, b) => b.weeks - a.weeks);
                 
+                // Add a visual separator
+                const separator = document.createElement('hr');
+                separator.className = 'my-6 border-gray-300';
+                resultsContainer.appendChild(separator);
+
                 sortedMilestones.forEach(item => {
                     const deadline = new Date(finalDeliveryDate.getTime());
                     deadline.setDate(deadline.getDate() - (item.weeks * 7));
@@ -417,20 +471,48 @@
                 resultsContainer.style.display = 'block';
             }
 
-            // *** NEW: Special function to highlight the main calculated date ***
-            function appendPrimaryResult(description, date) {
+            // MODIFIED: Special function to highlight key dates, now supports weeks/warnings
+            function appendPrimaryResult(description, date, weeks = null, hasWarning = false) {
                 const resultItem = document.createElement('div');
                 // Use a special class for primary result
                 resultItem.className = 'result-item-primary flex justify-between items-center flex-wrap';
                 
                 const leftContainer = document.createElement('div');
-                leftContainer.className = 'pr-4';
+                leftContainer.className = 'flex-grow pr-4';
 
                 const milestoneText = document.createElement('p');
                 milestoneText.className = 'text-lg font-semibold text-green-800';
                 milestoneText.textContent = description;
-                
                 leftContainer.appendChild(milestoneText);
+
+                // Add weeks text if provided
+                if (weeks !== null) {
+                    const weeksText = document.createElement('p');
+                    weeksText.className = 'text-sm text-green-700 italic';
+                    // *** NEW: Add descriptor text ***
+                    const descriptor = description.includes('Order') ? 'lead time' : 'prior to delivery';
+                    weeksText.textContent = `(${weeks} weeks ${descriptor})`;
+                    leftContainer.appendChild(weeksText);
+                }
+
+                // Add warning text if provided
+                if (hasWarning) {
+                    const warningContainer = document.createElement('div');
+                    warningContainer.className = 'mt-2 flex items-center text-xs text-amber-800 bg-amber-100 p-2 rounded-md';
+
+                    const warningIconHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 flex-shrink-0">
+                            <path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                            <path d="M12 9v4"></path><path d="M12 17h.01"></path>
+                        </svg>`;
+                    
+                    const warningText = document.createElement('span');
+                    warningText.textContent = 'Note: This timeframe uses the CAET delivery date, not the final site delivery date.';
+                    
+                    warningContainer.innerHTML = warningIconHTML;
+                    warningContainer.appendChild(warningText);
+                    leftContainer.appendChild(warningContainer);
+                }
 
                 const milestoneDate = document.createElement('p');
                 milestoneDate.className = 'text-xl font-bold text-green-800 text-right flex-shrink-0';
@@ -441,7 +523,8 @@
                 resultsContainer.appendChild(resultItem);
             }
 
-            // *** MODIFIED: Renamed 'appendResult' (no other changes to this function) ***
+
+            // This function remains unchanged
             function appendResult(description, date, weeks, hasWarning) {
                 const resultItem = document.createElement('div');
                 resultItem.className = 'result-item flex justify-between items-center flex-wrap';
@@ -487,7 +570,7 @@
                 resultsContainer.appendChild(resultItem);
             }
             
-            // *** MODIFIED: Add event listener to update both link and new dropdown ***
+            // Add event listener to update both link and new dropdown
             materialSelect.addEventListener('change', () => {
                 updateIfmLink();
                 updateMilestoneSelector();
@@ -495,7 +578,7 @@
                 resultsContainer.innerHTML = '';
             });
 
-            // *** MODIFIED: Main calculate button now checks which mode is active ***
+            // Main calculate button now checks which mode is active
             calculateBtn.addEventListener('click', () => {
                 // Check which input section is visible
                 if (standardInputs.style.display !== 'none') {
@@ -507,8 +590,9 @@
 
             // Initial setup
             populateMaterials();
-            setupToggles(); // *** NEW: Set up the toggle listeners
+            setupToggles(); // Set up the toggle listeners
         });
     </script>
 </body>
 </html>
+
