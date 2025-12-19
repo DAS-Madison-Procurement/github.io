@@ -296,7 +296,7 @@
                     <div class="flex space-x-6 border-b border-gray-200 mb-6 overflow-x-auto">
                         <button class="tab-btn active pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-processing')">Processing Time</button>
                         <button class="tab-btn pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-scoring')">Scoring Criteria</button>
-                        <button class="tab-btn pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-tpp')">TPP Matrix</button>
+                        <button class="tab-btn pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-tpp')">TPP Matrix & Guidelines</button>
                     </div>
 
                     <div id="tab-processing" class="tab-content block">
@@ -382,29 +382,78 @@
                     </div>
 
                     <div id="tab-tpp" class="tab-content hidden">
-                        <p class="text-sm text-gray-500 mb-4">Transmission Planning Protection (TPP) Requirements.</p>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-center border-collapse text-xs">
-                                <thead>
-                                    <tr>
-                                        <th class="text-left">OpCo</th>
-                                        <th>765kV</th><th>500kV</th><th>345kV</th><th>230kV</th><th>138kV</th>
-                                        <th>115kV</th><th>69kV</th><th>46kV</th><th>36kV</th><th>34kV</th><th>25kV</th><th>23kV</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td class="text-left font-bold">CE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td></tr>
-                                    <tr><td class="text-left font-bold">JC</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td></tr>
-                                    <tr><td class="text-left font-bold">ME</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                    <tr><td class="text-left font-bold">MP</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td></tr>
-                                    <tr><td class="text-left font-bold">OE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td></tr>
-                                    <tr><td class="text-left font-bold">PE</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td></tr>
-                                    <tr><td class="text-left font-bold">PN</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                    <tr><td class="text-left font-bold">PP</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                    <tr><td class="text-left font-bold">TE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td></tr>
-                                    <tr><td class="text-left font-bold">WP</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td></tr>
-                                </tbody>
-                            </table>
+                        
+                        <div class="mb-8">
+                            <h3 class="font-bold text-gray-800 mb-2">1. Voltage/OpCo Matrix</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-center border-collapse text-xs">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-left">OpCo</th>
+                                            <th>765kV</th><th>500kV</th><th>345kV</th><th>230kV</th><th>138kV</th>
+                                            <th>115kV</th><th>69kV</th><th>46kV</th><th>36kV</th><th>34kV</th><th>25kV</th><th>23kV</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td class="text-left font-bold">CE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td></tr>
+                                        <tr><td class="text-left font-bold">JC</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td></tr>
+                                        <tr><td class="text-left font-bold">ME</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                        <tr><td class="text-left font-bold">MP</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td></tr>
+                                        <tr><td class="text-left font-bold">OE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td></tr>
+                                        <tr><td class="text-left font-bold">PE</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td></tr>
+                                        <tr><td class="text-left font-bold">PN</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                        <tr><td class="text-left font-bold">PP</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                        <tr><td class="text-left font-bold">TE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td></tr>
+                                        <tr><td class="text-left font-bold">WP</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="pt-6 border-t border-gray-200">
+                             <h3 class="font-bold text-gray-800 mb-4">2. Detailed Scope Guidelines</h3>
+                             <div class="bg-gray-50 p-4 rounded text-sm text-gray-700 space-y-4">
+                                <p>The below guidelines help determine if updated onelines must be sent to TPP for review & approval. If the scope of work includes <strong>anything</strong> in the applicable list below, then it must be sent in for review.</p>
+                                
+                                <div class="pl-4">
+                                    <h4 class="font-bold text-blue-900 mb-2">Applicable – components INCLUDE:</h4>
+                                    <ul class="list-disc pl-5 space-y-1">
+                                        <li><strong>Topology Change</strong>
+                                            <ul class="list-circle pl-5 mt-1 text-gray-600">
+                                                <li>New/Removal Substation</li>
+                                                <li>Adding/Moving Line Terminal</li>
+                                                <li>Bus reconfiguration</li>
+                                                <li>New/Reconductoring Transmission Line</li>
+                                            </ul>
+                                        </li>
+                                        <li class="mt-2"><strong>Adding/Removing/Replacing equipment</strong>
+                                            <ul class="list-circle pl-5 mt-1 text-gray-600 grid md:grid-cols-2 gap-x-4">
+                                                <li>Circuit breaker</li>
+                                                <li>Circuit switcher</li>
+                                                <li>Disconnect switch</li>
+                                                <li>Current transformer</li>
+                                                <li>Gas insulated bus</li>
+                                                <li>Substation conductor</li>
+                                                <li>Transmission line drop</li>
+                                                <li>Transmission line conductor</li>
+                                                <li>Wave trap</li>
+                                                <li>Fuse</li>
+                                                <li>Protective relays with phase CT inputs</li>
+                                                <li>Phase relay setting</li>
+                                                <li>Digital Fault Recorders (DFRs)</li>
+                                                <li>Phasor Measurement Unit (PMUs)</li>
+                                                <li>Metering devices with CT inputs</li>
+                                                <li>Transducers with CT inputs</li>
+                                                <li>Power transformer</li>
+                                                <li>Capacitor Bank</li>
+                                                <li>Reactor</li>
+                                                <li>Generator</li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <p class="text-xs text-gray-500 italic">Note: If the project scope is <strong>only</strong> listed in the not applicable list (not shown here), it does not need review.</p>
+                             </div>
                         </div>
                     </div>
 
