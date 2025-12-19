@@ -7,32 +7,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display.swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+        body { font-family: 'Inter', sans-serif; }
         .calculator-card {
             background-color: white;
             border-radius: 0.75rem;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease-in-out;
-            overflow: hidden; /* Added to contain children for smooth collapse */
+            overflow: hidden;
         }
-        .collapsible-card {
-            padding: 0 !important; /* Override default padding for collapsible sections */
-        }
-        .btn-brand {
-            background-color: #005a9e; /* FirstEnergy Blue */
-            color: white;
-        }
-        .btn-brand:hover {
-            background-color: #004a83;
-        }
-        .text-brand {
-            color: #005a9e;
-        }
-        .focus-brand:focus {
-            --tw-ring-color: #005a9e;
-        }
+        .collapsible-card { padding: 0 !important; }
+        .btn-brand { background-color: #005a9e; color: white; }
+        .btn-brand:hover { background-color: #004a83; }
+        .text-brand { color: #005a9e; }
+        .focus-brand:focus { --tw-ring-color: #005a9e; }
         .result-box {
             border: 1px solid #e5e7eb;
             border-radius: 0.5rem;
@@ -49,17 +36,18 @@
             font-size: 1.875rem;
             font-weight: 700;
             color: #111827;
-            min-height: 2.75rem; /* Ensure consistent height */
+            min-height: 2.75rem;
         }
-        .score-5 { color: #16a34a; } /* Green */
-        .score-4 { color: #2563eb; } /* Blue */
-        .score-3 { color: #ca8a04; } /* Yellow */
-        .score-2 { color: #ea580c; } /* Orange */
-        .score-1 { color: #dc2626; } /* Red */
-        table thead th {
-            background-color: #f3f4f6;
-        }
-        /* New Collapsible Styles */
+        .score-5 { color: #16a34a; }
+        .score-4 { color: #2563eb; }
+        .score-3 { color: #ca8a04; }
+        .score-2 { color: #ea580c; }
+        .score-1 { color: #dc2626; }
+        
+        /* Table Styles */
+        table thead th { background-color: #f3f4f6; }
+        td, th { padding: 0.75rem; border-bottom: 1px solid #e5e7eb; }
+        
         .collapsible-toggle {
             cursor: pointer;
             display: flex;
@@ -68,7 +56,7 @@
             padding: 2rem;
         }
         .collapsible-content {
-            max-height: 2000px; /* Large enough for any content */
+            max-height: 2000px;
             overflow: hidden;
             transition: max-height 0.4s ease-in-out;
         }
@@ -76,19 +64,30 @@
             max-height: 0;
             border-top: none;
         }
-        .chevron-icon {
-            transition: transform 0.3s ease-in-out;
+        .chevron-icon { transition: transform 0.3s ease-in-out; }
+        .is-collapsed .chevron-icon { transform: rotate(-180deg); }
+        
+        /* Badge Styles for TPP */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
         }
-        .is-collapsed .chevron-icon {
-            transform: rotate(-180deg);
+        .badge-gray { background-color: #f3f4f6; color: #4b5563; }
+        .badge-green { background-color: #dcfce7; color: #166534; }
+
+        /* Tab Styles */
+        .tab-btn {
+            border-bottom: 2px solid transparent;
+            color: #6b7280;
         }
-        /* Toggle Switch Styles */
-        .toggle-checkbox:checked {
-            right: 0;
-            border-color: #005a9e;
-        }
-        .toggle-checkbox:checked + .toggle-label {
-            background-color: #005a9e;
+        .tab-btn.active {
+            border-bottom-color: #005a9e;
+            color: #005a9e;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -99,7 +98,7 @@
             <img src="logo.png" alt="Dashiell Corp Logo" class="h-20 w-auto">
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">FirstEnergy QAQC Review Time Calculator</h1>
-                <p class="text-gray-600 mt-1">Enter project design hours to estimate review time and score.</p>
+                <p class="text-gray-600 mt-1">Enter project design hours to estimate review time and calculate scores.</p>
                  <p id="last-updated" class="text-sm text-gray-500 mt-2">Loading guideline data...</p>
             </div>
         </div>
@@ -112,7 +111,7 @@
                 </div>
 
                 <button id="calculate-btn" class="w-full btn-brand font-semibold py-4 px-4 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">
-                    Calculate Review Time
+                    Calculate Review Time & Size
                 </button>
 
                 <div class="grid md:grid-cols-3 gap-6 pt-4 border-t">
@@ -125,88 +124,94 @@
                          <p id="review-time-result" class="result-box-value"></p>
                      </div>
                      <div class="result-box">
-                         <span class="result-box-label">QAQC Grade</span>
-                         <p id="qaqc-score-result" class="result-box-value"></p>
+                         <span class="result-box-label">Expected Days</span>
+                         <p id="qaqc-days-result" class="result-box-value"></p>
                      </div>
                 </div>
                  <div id="discussion-note" class="text-center text-amber-600 font-semibold pt-4" style="display: none;"></div>
             </div>
         </div>
 
-        <!-- Batch Project Analyzer -->
         <div class="calculator-card collapsible-card">
             <div class="collapsible-toggle">
-                <h2 class="text-xl font-semibold text-gray-800">Batch Project Analyzer</h2>
+                <div class="flex items-center gap-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Calculate Project Score</h2>
+                </div>
                 <svg class="chevron-icon w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
             </div>
             <div class="collapsible-content">
                 <div class="px-8 pb-8 pt-6 border-t border-gray-200">
-                    <div class="text-sm text-gray-600 mb-4">
-                        <p class="font-medium mb-2">How to use the Batch Analyzer:</p>
-                        <ol class="list-decimal list-inside space-y-2">
-                            <li>Open the <strong>FE QC Timer SQL view</strong> and sort by the 'Start' date.</li>
-                            <li>Highlight and copy the project rows. The tool expects the following 9 columns in order:
-                                <br>
-                                <code class="text-xs bg-gray-100 p-1 rounded mt-1 inline-block">Project Number, Project Name, Order #, Hours, Project Size, DAS Due, Start, Finish, Duration</code>
-                            </li>
-                            <li>Paste the copied data into the text area below and click "Analyze Projects".</li>
-                        </ol>
-                    </div>
-                    <textarea id="batch-input" rows="8" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand font-mono text-sm" placeholder="705871    Sammis SS Boardman-Nevada Exit    16533057    900 ... 66"></textarea>
-                    <button id="analyze-batch-btn" class="w-full mt-4 btn-brand font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">
-                        Analyze Projects
-                    </button>
-                    <div class="flex items-center justify-end mt-4">
-                        <label for="batch-filter-toggle" class="mr-3 text-sm font-medium text-gray-700">Show only "Needs Adjustment"</label>
-                        <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                            <input type="checkbox" name="toggle" id="batch-filter-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                            <label for="batch-filter-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
+                        <div class="flex flex-col md:flex-row gap-4 items-end">
+                            <div class="flex-1 w-full">
+                                <label for="opco-select" class="block text-sm font-medium text-gray-700 mb-1">Operating Company (OpCo)</label>
+                                <select id="opco-select" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                                    <option value="">Select OpCo...</option>
+                                    <option value="CE">CE</option>
+                                    <option value="JC">JC</option>
+                                    <option value="ME">ME</option>
+                                    <option value="MP">MP</option>
+                                    <option value="OE">OE</option>
+                                    <option value="PE">PE</option>
+                                    <option value="PN">PN</option>
+                                    <option value="PP">PP</option>
+                                    <option value="TE">TE</option>
+                                    <option value="WP">WP</option>
+                                </select>
+                            </div>
+                            <div class="flex-1 w-full">
+                                <label for="voltage-select" class="block text-sm font-medium text-gray-700 mb-1">Voltage (kV)</label>
+                                <select id="voltage-select" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                                    <option value="">Select kV...</option>
+                                    <option value="765">765 kV</option>
+                                    <option value="500">500 kV</option>
+                                    <option value="345">345 kV</option>
+                                    <option value="230">230 kV</option>
+                                    <option value="138">138 kV</option>
+                                    <option value="115">115 kV</option>
+                                    <option value="69">69 kV</option>
+                                    <option value="46">46 kV</option>
+                                    <option value="36">36 kV</option>
+                                    <option value="34">34 kV</option>
+                                    <option value="25">25 kV</option>
+                                    <option value="23">23 kV</option>
+                                </select>
+                            </div>
+                            <div class="mb-1">
+                                <span id="tpp-badge" class="badge badge-gray">TPP Check: Pending</span>
+                            </div>
                         </div>
                     </div>
-                    <div id="batch-results-container" class="mt-2 overflow-auto" style="max-height: 400px;">
-                        <!-- Results will be injected here -->
+
+                    <div class="grid md:grid-cols-3 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-bold text-red-600 mb-1">High Errors</label>
+                            <input type="number" id="errors-h" value="0" min="0" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-orange-500 mb-1">Medium Errors</label>
+                            <input type="number" id="errors-m" value="0" min="0" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-blue-500 mb-1">Low Errors</label>
+                            <input type="number" id="errors-l" value="0" min="0" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                        </div>
+                    </div>
+
+                    <button id="calculate-score-btn" class="w-full bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-900 transition mb-6">
+                        Calculate Final Grade
+                    </button>
+
+                    <div class="result-box bg-gray-50">
+                        <span class="result-box-label">Calculated QAQC Grade</span>
+                        <p id="final-score-result" class="text-4xl font-bold text-gray-400">-</p>
+                        <p id="score-reason" class="text-sm text-gray-500 mt-2">Enter hours above and errors to calculate.</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Find Time by Score Calculator -->
-        <div class="calculator-card collapsible-card">
-            <div class="collapsible-toggle">
-                <h2 class="text-xl font-semibold text-gray-800">Find Review Time by Desired Score</h2>
-                <svg class="chevron-icon w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-            </div>
-            <div class="collapsible-content">
-                <div class="px-8 pb-8 pt-6 border-t border-gray-200">
-                    <div class="grid md:grid-cols-2 gap-6 items-end">
-                        <div>
-                            <label for="score-calc-hours" class="block text-sm font-medium text-gray-700">Total Project Design Hours</label>
-                            <input type="number" id="score-calc-hours" placeholder="e.g., 5000" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
-                        </div>
-                        <div>
-                            <label for="desired-score" class="block text-sm font-medium text-gray-700">Desired QAQC Score</label>
-                            <select id="desired-score" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
-                                <option value="">Select a score...</option>
-                                <option value="5">5 (Best)</option>
-                                <option value="4">4</option>
-                                <option value="3">3</option>
-                                <option value="2">2</option>
-                                <option value="1">1 (Minimum)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button id="calculate-time-by-score-btn" class="w-full mt-4 btn-brand font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">
-                        Calculate Required Time
-                    </button>
-                    <div class="mt-4 pt-4 border-t text-center">
-                        <p class="text-sm text-gray-600">To get this score, you need a review time of at least:</p>
-                        <p id="time-by-score-result" class="text-2xl font-bold text-brand h-10 flex items-center justify-center"></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Date Calculators -->
         <div class="grid md:grid-cols-2 gap-8">
             <div class="calculator-card collapsible-card">
                  <div class="collapsible-toggle">
@@ -257,105 +262,106 @@
             </div>
         </div>
 
-        <!-- Guidelines Table -->
         <div class="calculator-card collapsible-card is-collapsed">
             <div class="collapsible-toggle">
-                <h2 class="text-xl font-semibold text-gray-800">Processing Time Guidelines</h2>
+                <h2 class="text-xl font-semibold text-gray-800">Reference Tables & Guidelines</h2>
                  <svg class="chevron-icon w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
             </div>
             <div class="collapsible-content">
                  <div class="px-8 pb-8 pt-6 border-t border-gray-200">
-                    <p class="text-sm text-gray-600 text-center mb-4">The following durations are the standard expectation to receive a score of 5.</p>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr>
-                                    <th class="p-3 text-sm font-semibold text-gray-700 border-b">Project Size</th>
-                                    <th class="p-3 text-sm font-semibold text-gray-700 border-b">Engineering Hours</th>
-                                    <th class="p-3 text-sm font-semibold text-gray-700 border-b">Duration (Calendar Days)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="guidelines-table-body">
-                                <tr><td colspan="3" class="text-center p-4 text-gray-500">Loading guidelines...</td></tr>
-                            </tbody>
-                        </table>
+                    
+                    <div class="flex space-x-6 border-b border-gray-200 mb-6">
+                        <button class="tab-btn active pb-3 px-1 text-sm font-medium focus:outline-none" onclick="switchTab('tab-processing')">Processing Time</button>
+                        <button class="tab-btn pb-3 px-1 text-sm font-medium focus:outline-none" onclick="switchTab('tab-scoring')">Scoring Criteria</button>
+                        <button class="tab-btn pb-3 px-1 text-sm font-medium focus:outline-none" onclick="switchTab('tab-tpp')">TPP Matrix</button>
                     </div>
+
+                    <div id="tab-processing" class="tab-content block">
+                        <p class="text-sm text-gray-500 mb-4">Standard expected duration to receive a score of 5.</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr>
+                                        <th class="text-sm font-semibold text-gray-700">Project Size</th>
+                                        <th class="text-sm font-semibold text-gray-700">Engineering Hours</th>
+                                        <th class="text-sm font-semibold text-gray-700">Duration (Calendar Days)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="guidelines-table-body">
+                                    <tr><td colspan="3" class="text-center p-4 text-gray-500">Loading guidelines...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="tab-scoring" class="tab-content hidden">
+                        <p class="text-sm text-gray-500 mb-4">Maximum allowed errors per score category.</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr>
+                                        <th class="font-semibold text-gray-700">Score</th>
+                                        <th class="font-semibold text-gray-700">Criteria (High / Med / Low)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">S (0-499 hrs)</td></tr>
+                                    <tr><td class="score-5 font-bold">5</td><td>H:0, M:0, L:0</td></tr>
+                                    <tr><td class="score-4 font-bold">4</td><td>H:0, M:1, L:3</td></tr>
+                                    <tr><td class="score-3 font-bold">3</td><td>H:0, M:5, L:10</td></tr>
+                                    <tr><td class="score-2 font-bold">2</td><td>H:1, M:10, L:15</td></tr>
+                                    
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">M (500-1499 hrs)</td></tr>
+                                    <tr><td class="score-5 font-bold">5</td><td>H:0, M:0, L:0</td></tr>
+                                    <tr><td class="score-4 font-bold">4</td><td>H:0, M:2, L:5</td></tr>
+                                    <tr><td class="score-3 font-bold">3</td><td>H:1, M:10, L:15</td></tr>
+                                    <tr><td class="score-2 font-bold">2</td><td>H:2, M:15, L:20</td></tr>
+
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">L (1500-3999 hrs)</td></tr>
+                                    <tr><td class="score-5 font-bold">5</td><td>H:0, M:1, L:5</td></tr>
+                                    <tr><td class="score-4 font-bold">4</td><td>H:1, M:3, L:10</td></tr>
+                                    <tr><td class="score-3 font-bold">3</td><td>H:2, M:15, L:20</td></tr>
+                                    <tr><td class="score-2 font-bold">2</td><td>H:3, M:20, L:25</td></tr>
+
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">XL (4000-7499 hrs)</td></tr>
+                                    <tr><td class="score-5 font-bold">5</td><td>H:0, M:2, L:8</td></tr>
+                                    <tr><td class="score-4 font-bold">4</td><td>H:1, M:6, L:15</td></tr>
+                                    <tr><td class="score-3 font-bold">3</td><td>H:3, M:20, L:25</td></tr>
+                                    <tr><td class="score-2 font-bold">2</td><td>H:4, M:27, L:33</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="tab-tpp" class="tab-content hidden">
+                        <p class="text-sm text-gray-500 mb-4">Transmission Planning Protection (TPP) Requirements.</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-center border-collapse text-xs">
+                                <thead>
+                                    <tr>
+                                        <th class="text-left">OpCo</th>
+                                        <th>765kV</th><th>500kV</th><th>345kV</th><th>230kV</th><th>138kV</th>
+                                        <th>115kV</th><th>69kV</th><th>46kV</th><th>34kV</th><th>23kV</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td class="text-left font-bold">CE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr><td class="text-left font-bold">JC</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td></tr>
+                                    <tr><td class="text-left font-bold">ME</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr><td class="text-left font-bold">MP</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td></tr>
+                                    <tr><td class="text-left font-bold">OE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td></tr>
+                                    <tr><td class="text-left font-bold">PE</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td></tr>
+                                    <tr><td class="text-left font-bold">PN</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td></tr>
+                                    <tr><td class="text-left font-bold">PP</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr><td class="text-left font-bold">TE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td></tr>
+                                    <tr><td class="text-left font-bold">WP</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-        </div>
-
-        <!-- Scoring Guidelines Table -->
-        <div class="calculator-card collapsible-card is-collapsed">
-            <div class="collapsible-toggle">
-                <h2 class="text-xl font-semibold text-gray-800">QAQC Score Guidelines</h2>
-                <svg class="chevron-icon w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-            </div>
-            <div class="collapsible-content">
-                <div class="px-8 pb-8 pt-6 border-t border-gray-200">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="p-3 text-sm font-semibold text-gray-700 border-b">Score</th>
-                                    <th class="p-3 text-sm font-semibold text-gray-700 border-b">S (Small)</th>
-                                    <th class="p-3 text-sm font-semibold text-gray-700 border-b">M (Medium)</th>
-                                    <th class="p-3 text-sm font-semibold text-gray-700 border-b">L (Large)</th>
-                                    <th class="p-3 text-sm font-semibold text-gray-700 border-b">XL</th>
-                                    <th class="p-3 text-sm font-semibold text-gray-700 border-b">2XL, 3XL, 4XL</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="p-3 border-b border-gray-200 font-bold score-5">5</td>
-                                    <td class="p-3 border-b border-gray-200">31+ days</td>
-                                    <td class="p-3 border-b border-gray-200">61+ days</td>
-                                    <td class="p-3 border-b border-gray-200">76+ days</td>
-                                    <td class="p-3 border-b border-gray-200">92+ days</td>
-                                    <td class="p-3 border-b border-gray-200" rowspan="5" style="vertical-align: middle; text-align: center;">Score of 4 for 84+ days</td>
-                                </tr>
-                                <tr>
-                                    <td class="p-3 border-b border-gray-200 font-bold score-4">4</td>
-                                    <td class="p-3 border-b border-gray-200">28-30 days</td>
-                                    <td class="p-3 border-b border-gray-200">56-60 days</td>
-                                    <td class="p-3 border-b border-gray-200">70-75 days</td>
-                                    <td class="p-3 border-b border-gray-200">84-91 days</td>
-                                </tr>
-                                <tr>
-                                    <td class="p-3 border-b border-gray-200 font-bold score-3">3</td>
-                                    <td class="p-3 border-b border-gray-200">26-27 days</td>
-                                    <td class="p-3 border-b border-gray-200">52-55 days</td>
-                                    <td class="p-3 border-b border-gray-200">65-69 days</td>
-                                    <td class="p-3 border-b border-gray-200">77-83 days</td>
-                                </tr>
-                                <tr>
-                                    <td class="p-3 border-b border-gray-200 font-bold score-2">2</td>
-                                    <td class="p-3 border-b border-gray-200">23-25 days</td>
-                                    <td class="p-3 border-b border-gray-200">48-51 days</td>
-                                    <td class="p-3 border-b border-gray-200">60-64 days</td>
-                                    <td class="p-3 border-b border-gray-200">70-76 days</td>
-                                </tr>
-                                <tr>
-                                    <td class="p-3 border-b border-gray-200 font-bold score-1">1</td>
-                                    <td class="p-3 border-b border-gray-200">20-22 days</td>
-                                    <td class="p-3 border-b border-gray-200">44-47 days</td>
-                                    <td class="p-3 border-b border-gray-200">55-59 days</td>
-                                    <td class="p-3 border-b border-gray-200">63-69 days</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                         <p class="text-xs text-gray-500 mt-2 italic text-center">Note: The grade is determined by the days given for QAQC review (Requested need date - Received date).</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="text-center mt-8 pt-8 border-t flex justify-center gap-4">
-             <a href="https://firstenergycorp.sharepoint.com.mcas.ms/sites/ext-qaqce/SitePages/Home.aspx" target="_blank" class="inline-block bg-blue-100 text-blue-800 font-semibold py-3 px-6 rounded-lg hover:bg-blue-200 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400">
-                Go to FE QAQC SharePoint
-            </a>
-            <a href="index.html" class="inline-block bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-lg hover:bg-gray-300 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
-                Go to Procurement Lead Time Calculator
-            </a>
         </div>
 
         <footer class="text-center text-gray-500 text-sm mt-8">
@@ -364,27 +370,45 @@
     </div>
 
     <script>
+        // --- TAB SWITCHER LOGIC ---
+        function switchTab(tabId) {
+            // 1. Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('block'));
+            
+            // 2. Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            // 3. Show selected tab
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId).classList.add('block');
+            
+            // 4. Add active class to clicked button
+            event.target.classList.add('active');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             // Main Calculator Elements
             const engineeringHoursInput = document.getElementById('engineering-hours');
             const calculateBtn = document.getElementById('calculate-btn');
             const projectSizeResult = document.getElementById('project-size-result');
             const reviewTimeResult = document.getElementById('review-time-result');
-            const qaqcScoreResult = document.getElementById('qaqc-score-result');
+            const qaqcDaysResult = document.getElementById('qaqc-days-result');
             const lastUpdatedElement = document.getElementById('last-updated');
             const discussionNote = document.getElementById('discussion-note');
             
-            // Batch Analyzer Elements
-            const batchInput = document.getElementById('batch-input');
-            const analyzeBatchBtn = document.getElementById('analyze-batch-btn');
-            const batchResultsContainer = document.getElementById('batch-results-container');
-            const batchFilterToggle = document.getElementById('batch-filter-toggle');
-
-            // Find by Score Elements
-            const scoreCalcHoursInput = document.getElementById('score-calc-hours');
-            const desiredScoreSelect = document.getElementById('desired-score');
-            const calculateTimeByScoreBtn = document.getElementById('calculate-time-by-score-btn');
-            const timeByScoreResult = document.getElementById('time-by-score-result');
+            // Scoring Elements
+            const errorsH = document.getElementById('errors-h');
+            const errorsM = document.getElementById('errors-m');
+            const errorsL = document.getElementById('errors-l');
+            const calculateScoreBtn = document.getElementById('calculate-score-btn');
+            const finalScoreResult = document.getElementById('final-score-result');
+            const scoreReason = document.getElementById('score-reason');
+            
+            // TPP Elements
+            const opcoSelect = document.getElementById('opco-select');
+            const voltageSelect = document.getElementById('voltage-select');
+            const tppBadge = document.getElementById('tpp-badge');
 
             // Date Calculator Elements
             const submitDateInput = document.getElementById('submit-date');
@@ -396,105 +420,89 @@
 
             // Guidelines Table
             const guidelinesTableBody = document.getElementById('guidelines-table-body');
-
             const googleSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdpYw6MNdXxL_H19JD8vJzNbKakS4eh2rud1QyidT4sN92xgjVtced3Y9FgjLMkMPD_dG6t6spqfMy/pub?output=csv';
 
             let guidelines = [];
-            let activeReviewDays = null; // To store the result from the main calculator
+            let activeReviewDays = null;
+            let currentCalculatedSize = null;
+            let isTPPActive = false;
 
-            function renderGuidelinesTable(guidelineData) {
-                guidelinesTableBody.innerHTML = '';
-                if (guidelineData.length === 0) {
-                     guidelinesTableBody.innerHTML = '<tr><td colspan="3" class="text-center p-4 text-gray-500">No guidelines found.</td></tr>';
-                     return;
+            // --- DATA: SCORING MATRIX ---
+            const scoringCriteria = {
+                'S': { range: [0, 499], scores: { 5: { h: 0, m: 0, l: 0 }, 4: { h: 0, m: 1, l: 3 }, 3: { h: 0, m: 5, l: 10 }, 2: { h: 1, m: 10, l: 15 } } },
+                'M': { range: [500, 1499], scores: { 5: { h: 0, m: 0, l: 0 }, 4: { h: 0, m: 2, l: 5 }, 3: { h: 1, m: 10, l: 15 }, 2: { h: 2, m: 15, l: 20 } } },
+                'L': { range: [1500, 3999], scores: { 5: { h: 0, m: 1, l: 5 }, 4: { h: 1, m: 3, l: 10 }, 3: { h: 2, m: 15, l: 20 }, 2: { h: 3, m: 20, l: 25 } } },
+                'XL': { range: [4000, 7499], scores: { 5: { h: 0, m: 2, l: 8 }, 4: { h: 1, m: 6, l: 15 }, 3: { h: 3, m: 20, l: 25 }, 2: { h: 4, m: 27, l: 33 } } },
+                '2XL': { range: [7500, 9999], scores: { 5: { h: 2, m: 4, l: 12 }, 4: { h: 3, m: 9, l: 25 }, 3: { h: 6, m: 25, l: 36 }, 2: { h: 10, m: 36, l: 45 } } },
+                '3XL': { range: [10000, 14999], scores: { 5: { h: 3, m: 6, l: 16 }, 4: { h: 5, m: 12, l: 30 }, 3: { h: 9, m: 30, l: 41 }, 2: { h: 13, m: 40, l: 49 } } },
+                '4XL': { range: [15000, 9999999], scores: { 5: { h: 5, m: 8, l: 20 }, 4: { h: 8, m: 15, l: 35 }, 3: { h: 11, m: 35, l: 45 }, 2: { h: 16, m: 46, l: 55 } } }
+            };
+
+            // --- DATA: TPP MATRIX ---
+            const tppMatrix = {
+                'CE': [345, 138, 36],
+                'JC': [500, 230, 115, 34],
+                'ME': [500, 230, 138, 115, 69],
+                'MP': [765, 500, 345, 138, 69, 46, 34, 25, 23],
+                'OE': [345, 138, 69, 34, 23],
+                'PE': [500, 230, 138, 115, 69, 34],
+                'PN': [500, 345, 230, 138, 115, 46],
+                'PP': [500, 345, 138, 69],
+                'TE': [345, 138, 69, 34],
+                'WP': [500, 345, 230, 138, 115, 69, 46, 34, 25]
+            };
+
+            function getHardCodedSize(hours) {
+                for (const [size, data] of Object.entries(scoringCriteria)) {
+                    if (hours >= data.range[0] && hours <= data.range[1]) {
+                        return size;
+                    }
                 }
-                guidelineData.forEach(g => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="p-3 border-b border-gray-200">${g.size}</td>
-                        <td class="p-3 border-b border-gray-200">${g.minHours.toLocaleString()} - ${g.maxHours.toLocaleString()}</td>
-                        <td class="p-3 border-b border-gray-200">${g.days}</td>
-                    `;
-                    guidelinesTableBody.appendChild(row);
-                });
+                return null;
             }
 
             async function fetchGuidelines() {
                 try {
                     const response = await fetch(googleSheetUrl);
-                    if (!response.ok) throw new Error('Network response was not ok. Please ensure the Google Sheet is "Published to the web".');
+                    if (!response.ok) throw new Error('Network response was not ok.');
                     const csvText = await response.text();
                     
                     const rows = csvText.trim().split('\n').slice(1).filter(row => row);
-                    let mostRecentDate = null;
 
                     guidelines = rows.map(row => {
                         const columns = row.split(',');
-                        const lastEdited = columns[4] ? columns[4].trim().replace(/"/g, '') : null;
-
-                        if (lastEdited) {
-                            const currentDate = new Date(lastEdited);
-                            if (!isNaN(currentDate.getTime())) {
-                                if (!mostRecentDate || currentDate > mostRecentDate) {
-                                    mostRecentDate = currentDate;
-                                }
-                            }
-                        }
-                        
                         return {
-                            size: columns[0].trim().replace(/"/g, ''),
+                            size: columns[0] ? columns[0].trim().replace(/"/g, '') : '',
                             minHours: parseInt(columns[1].trim(), 10),
                             maxHours: parseInt(columns[2].trim(), 10),
                             days: parseInt(columns[3].trim(), 10),
                         };
                     });
                     
-                    renderGuidelinesTable(guidelines);
-
-                    if (mostRecentDate) {
-                         const formattedDate = mostRecentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
-                        lastUpdatedElement.textContent = `Guidelines last updated on: ${formattedDate}`;
+                    // Populate Tab 1
+                    guidelinesTableBody.innerHTML = '';
+                    if (guidelines.length === 0) {
+                        guidelinesTableBody.innerHTML = '<tr><td colspan="3" class="text-center p-4 text-gray-500">No guidelines found.</td></tr>';
                     } else {
-                        lastUpdatedElement.textContent = `Processing guidelines are managed live via Google Sheets.`;
+                        guidelines.forEach(g => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td class="p-3 border-b border-gray-200">${g.size}</td>
+                                <td class="p-3 border-b border-gray-200">${g.minHours.toLocaleString()} - ${g.maxHours.toLocaleString()}</td>
+                                <td class="p-3 border-b border-gray-200">${g.days}</td>
+                            `;
+                            guidelinesTableBody.appendChild(row);
+                        });
                     }
+
+                    lastUpdatedElement.textContent = "Guidelines loaded successfully.";
 
                 } catch (error) {
                     console.error('Failed to load guidelines:', error);
-                    projectSizeResult.textContent = 'Error';
-                    lastUpdatedElement.textContent = `Error: Could not load guideline data. ${error.message}`;
-                    guidelinesTableBody.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-red-500">Failed to load data.</td></tr>`;
+                    lastUpdatedElement.textContent = `Error: Could not load guideline data.`;
                 }
             }
 
-            const qaqcScores = {
-                'S': { 31: 5, 28: 4, 26: 3, 23: 2, 20: 1 },
-                'M': { 61: 5, 56: 4, 52: 3, 48: 2, 44: 1 },
-                'L': { 76: 5, 70: 4, 65: 3, 60: 2, 55: 1 },
-                'XL': { 92: 5, 84: 4, 77: 3, 70: 2, 63: 1 },
-                '2XL': { 'default': 4 }, '3XL': { 'default': 4 }, '4XL': { 'default': 4 },
-            };
-
-            function getQaqcScore(sizeKey, reviewDays) {
-                if (!qaqcScores[sizeKey]) return 'N/A';
-                const scoreMap = qaqcScores[sizeKey];
-                if(scoreMap.default) return scoreMap.default;
-                const sortedDays = Object.keys(scoreMap).map(Number).sort((a, b) => b - a);
-                for (const days of sortedDays) {
-                    if (reviewDays >= days) return scoreMap[days];
-                }
-                return 1;
-            }
-
-            function getDaysForScore(sizeKey, desiredScore) {
-                if (!qaqcScores[sizeKey]) return null;
-                const scoreMap = qaqcScores[sizeKey];
-                if (scoreMap.default) {
-                    return scoreMap.default === desiredScore ? 84 : null;
-                }
-                const entry = Object.entries(scoreMap).find(([days, score]) => score === desiredScore);
-                return entry ? parseInt(entry[0], 10) : null;
-            }
-            
             function formatDate(date) {
                 if (!date || isNaN(date)) return 'Invalid Date';
                 return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
@@ -512,44 +520,107 @@
                 return date;
             }
 
-            function calculate() {
-                const hours = parseInt(engineeringHoursInput.value, 10);
-                discussionNote.style.display = 'none';
-                qaqcScoreResult.className = 'result-box-value'; 
-                activeReviewDays = null; // Reset on each calculation
-
-                if (isNaN(hours) || hours <= 0) {
-                    projectSizeResult.textContent = ''; reviewTimeResult.textContent = ''; qaqcScoreResult.textContent = '';
+            // --- TPP CHECKER ---
+            function checkTPP() {
+                const opco = opcoSelect.value;
+                const voltage = parseInt(voltageSelect.value, 10);
+                
+                if (!opco || isNaN(voltage)) {
+                    isTPPActive = false;
+                    tppBadge.className = 'badge badge-gray';
+                    tppBadge.textContent = 'Select OpCo & kV to check TPP';
                     return;
                 }
 
+                if (tppMatrix[opco] && tppMatrix[opco].includes(voltage)) {
+                    isTPPActive = true;
+                    tppBadge.className = 'badge badge-green';
+                    tppBadge.textContent = 'TPP Active';
+                } else {
+                    isTPPActive = false;
+                    tppBadge.className = 'badge badge-gray';
+                    tppBadge.textContent = 'Standard Project';
+                }
+            }
+
+            // --- MAIN CALCULATION ---
+            function calculate() {
+                const hours = parseInt(engineeringHoursInput.value, 10);
+                discussionNote.style.display = 'none';
+                activeReviewDays = null;
+
+                if (isNaN(hours) || hours <= 0) {
+                    projectSizeResult.textContent = ''; 
+                    reviewTimeResult.textContent = ''; 
+                    qaqcDaysResult.textContent = '';
+                    currentCalculatedSize = null;
+                    return;
+                }
+
+                currentCalculatedSize = getHardCodedSize(hours);
                 const guideline = guidelines.find(g => hours >= g.minHours && hours <= g.maxHours);
 
                 if (guideline) {
-                    activeReviewDays = guideline.days; // Store days for date calculators
-                    projectSizeResult.textContent = guideline.size;
-                    const weeks = guideline.days / 7; // Use 7 for calendar days
-                    reviewTimeResult.innerHTML = `<span class="block">${guideline.days} days</span><span class="text-base font-normal text-gray-500">(${weeks.toFixed(1)} wks)</span>`;
+                    activeReviewDays = guideline.days;
+                    projectSizeResult.textContent = guideline.size; 
+                    const weeks = guideline.days / 7;
+                    reviewTimeResult.innerHTML = `<span class="block text-2xl">${weeks.toFixed(1)} Weeks</span>`;
+                    qaqcDaysResult.textContent = `${guideline.days} Days`;
                     
-                    if (hours > 10001 || guideline.days >= 84) { // 12 weeks * 7 days
-                         discussionNote.textContent = 'Any project with MORE than 10,001 Engineering Hours and/or 12+ Weeks will require a discussion.';
+                    if (hours > 10001 || guideline.days >= 84) {
+                         discussionNote.textContent = 'Projects > 10,001 Hours or 12+ Weeks require discussion.';
                          discussionNote.style.display = 'block';
                     }
-                    
-                    let sizeKey = guideline.size.replace(' Projects', '').substring(0, 3).trim();
-                    if(sizeKey === 'Sma') sizeKey = 'S';
-                    if(sizeKey === 'Med') sizeKey = 'M';
-                    if(sizeKey === 'Lar') sizeKey = 'L';
-                    const score = getQaqcScore(sizeKey, guideline.days);
-                    qaqcScoreResult.textContent = score;
-                    qaqcScoreResult.classList.add(`score-${score}`);
+                } else if (currentCalculatedSize) {
+                    projectSizeResult.textContent = `Size ${currentCalculatedSize}`;
+                    reviewTimeResult.textContent = "See Matrix";
                 } else {
                     projectSizeResult.textContent = 'N/A';
                     reviewTimeResult.textContent = 'N/A';
-                    qaqcScoreResult.textContent = 'N/A';
                 }
             }
-            
+
+            // --- SCORING LOGIC ---
+            function calculateScore() {
+                const hours = parseInt(engineeringHoursInput.value, 10);
+                const hErrors = parseInt(errorsH.value, 10) || 0;
+                const mErrors = parseInt(errorsM.value, 10) || 0;
+                const lErrors = parseInt(errorsL.value, 10) || 0;
+                
+                checkTPP();
+
+                if (isNaN(hours)) {
+                    finalScoreResult.textContent = "-";
+                    scoreReason.textContent = "Please enter Project Design Hours first.";
+                    return;
+                }
+
+                const size = getHardCodedSize(hours);
+                if (!size) {
+                    finalScoreResult.textContent = "N/A";
+                    scoreReason.textContent = "Hours out of range.";
+                    return;
+                }
+
+                const criteria = scoringCriteria[size].scores;
+                
+                let hScore = 1, mScore = 1, lScore = 1;
+
+                for (let s = 5; s >= 2; s--) { if (hErrors <= criteria[s].h) { hScore = s; break; } }
+                for (let s = 5; s >= 2; s--) { if (mErrors <= criteria[s].m) { mScore = s; break; } }
+                for (let s = 5; s >= 2; s--) { if (lErrors <= criteria[s].l) { lScore = s; break; } }
+
+                let finalScore = Math.min(hScore, mScore, lScore);
+
+                finalScoreResult.className = `text-4xl font-bold score-${finalScore}`;
+                finalScoreResult.textContent = finalScore;
+                
+                scoreReason.innerHTML = `
+                    Based on Size <strong>${size}</strong> ${isTPPActive ? '(TPP Active)' : '(Standard)'}:<br>
+                    High: Score ${hScore} | Medium: Score ${mScore} | Low: Score ${lScore}
+                `;
+            }
+
             function setupCollapsibles() {
                 document.querySelectorAll('.collapsible-toggle').forEach(toggle => {
                     toggle.addEventListener('click', () => {
@@ -558,179 +629,13 @@
                     });
                 });
             }
-            
-            function applyBatchFilter() {
-                const showOnlyNeedsAdjustment = batchFilterToggle.checked;
-                const rows = batchResultsContainer.querySelectorAll('tbody tr');
-                
-                rows.forEach(row => {
-                    if (showOnlyNeedsAdjustment) {
-                        if (row.dataset.needsAdjustment === 'true') {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    } else {
-                        row.style.display = '';
-                    }
-                });
-            }
 
             calculateBtn.addEventListener('click', calculate);
+            calculateScoreBtn.addEventListener('click', calculateScore);
             engineeringHoursInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') calculate(); });
             
-            analyzeBatchBtn.addEventListener('click', () => {
-                const inputText = batchInput.value.trim();
-                if (!inputText) {
-                    batchResultsContainer.innerHTML = `<p class="text-red-500 text-center">Please paste project data into the text area.</p>`;
-                    return;
-                }
-
-                if (guidelines.length === 0) {
-                    batchResultsContainer.innerHTML = `<p class="text-red-500 text-center">Guideline data is not loaded yet. Please wait a moment and try again.</p>`;
-                    return;
-                }
-
-                const projects = inputText.split('\n').map(line => {
-                    const parts = line.split('\t'); // Use tab as a separator
-                    if (parts.length < 9) return null; // Ensure there are enough columns
-                    
-                    const name = parts[1] ? parts[1].trim() : '';
-                    const hours = parts[3] ? parseInt(parts[3].trim(), 10) : NaN;
-                    const duration = parts[8] ? parseInt(parts[8].trim(), 10) : NaN;
-
-                    if (!name || isNaN(hours) || isNaN(duration)) return null;
-                    return { name, hours, duration };
-                }).filter(Boolean);
-
-                if (projects.length === 0) {
-                    batchResultsContainer.innerHTML = `<p class="text-red-500 text-center">No valid projects found. Please ensure you are copying the full rows from your spreadsheet.</p>`;
-                    return;
-                }
-
-                let resultsHTML = `
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr>
-                                <th class="p-3 text-sm font-semibold text-gray-700 border-b">Project</th>
-                                <th class="p-3 text-sm font-semibold text-gray-700 border-b text-center">Current Score</th>
-                                <th class="p-3 text-sm font-semibold text-gray-700 border-b text-center">Days for Score 5</th>
-                                <th class="p-3 text-sm font-semibold text-gray-700 border-b text-center">Adjustment Needed</th>
-                                <th class="p-3 text-sm font-semibold text-gray-700 border-b">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
-                projects.forEach(project => {
-                    const guideline = guidelines.find(g => project.hours >= g.minHours && project.hours <= g.maxHours);
-                    let isAdjustmentNeeded = false;
-
-                    if (!guideline) {
-                        resultsHTML += `
-                            <tr class="bg-gray-50" data-needs-adjustment="false">
-                                <td class="p-3 border-b border-gray-200 font-medium">${project.name}</td>
-                                <td class="p-3 border-b border-gray-200 text-center" colspan="4">No size guideline found for ${project.hours.toLocaleString()} hours.</td>
-                            </tr>
-                        `;
-                        return;
-                    }
-                    
-                    let sizeKey = guideline.size.replace(' Projects', '').substring(0, 3).trim();
-                    if(sizeKey === 'Sma') sizeKey = 'S';
-                    if(sizeKey === 'Med') sizeKey = 'M';
-                    if(sizeKey === 'Lar') sizeKey = 'L';
-
-                    const currentScore = getQaqcScore(sizeKey, project.duration);
-                    const targetDaysFor5 = getDaysForScore(sizeKey, 5);
-                    
-                    let adjustment = 'N/A';
-                    let status = '';
-                    let rowClass = '';
-
-                    if (targetDaysFor5 !== null) {
-                        const difference = targetDaysFor5 - project.duration;
-                        if (difference > 0) {
-                            adjustment = `+${difference} days`;
-                            status = `<span class="font-semibold text-amber-600">Needs Adjustment</span>`;
-                            rowClass = 'bg-amber-50';
-                            isAdjustmentNeeded = true;
-                        } else {
-                            adjustment = 'None';
-                            status = `<span class="font-semibold text-green-600">Meets Goal</span>`;
-                        }
-                    } else {
-                        if (currentScore >= 4) {
-                             status = `<span class="font-semibold text-green-600">Meets Goal (Score 4)</span>`;
-                        } else {
-                             status = `<span class="font-semibold text-amber-600">Below Goal (Score 4)</span>`;
-                             rowClass = 'bg-amber-50';
-                             isAdjustmentNeeded = true;
-                        }
-                    }
-
-                    resultsHTML += `
-                        <tr class="${rowClass}" data-needs-adjustment="${isAdjustmentNeeded}">
-                            <td class="p-3 border-b border-gray-200 font-medium">${project.name}</td>
-                            <td class="p-3 border-b border-gray-200 text-center score-${currentScore} font-bold">${currentScore}</td>
-                            <td class="p-3 border-b border-gray-200 text-center">${targetDaysFor5 || 'N/A'}</td>
-                            <td class="p-3 border-b border-gray-200 text-center">${adjustment}</td>
-                            <td class="p-3 border-b border-gray-200">${status}</td>
-                        </tr>
-                    `;
-                });
-
-                resultsHTML += `</tbody></table>`;
-                batchResultsContainer.innerHTML = resultsHTML;
-                applyBatchFilter(); // Apply filter after rendering
-            });
-
-            batchFilterToggle.addEventListener('change', applyBatchFilter);
-
-            calculateTimeByScoreBtn.addEventListener('click', () => {
-                const hours = parseInt(scoreCalcHoursInput.value, 10);
-                const desiredScore = parseInt(desiredScoreSelect.value, 10);
-                timeByScoreResult.classList.remove('text-red-500');
-                timeByScoreResult.className = 'text-2xl font-bold text-brand h-10 flex items-center justify-center';
-
-
-                if (isNaN(hours) || hours <= 0) {
-                    timeByScoreResult.textContent = 'Enter project hours.';
-                    timeByScoreResult.classList.add('text-red-500');
-                    return;
-                }
-                if (isNaN(desiredScore)) {
-                    timeByScoreResult.textContent = 'Select a desired score.';
-                    timeByScoreResult.classList.add('text-red-500');
-                    return;
-                }
-
-                const guideline = guidelines.find(g => hours >= g.minHours && hours <= g.maxHours);
-
-                if (guideline) {
-                    let sizeKey = guideline.size.replace(' Projects', '').substring(0, 3).trim();
-                    if(sizeKey === 'Sma') sizeKey = 'S';
-                    if(sizeKey === 'Med') sizeKey = 'M';
-                    if(sizeKey === 'Lar') sizeKey = 'L';
-                    
-                    const requiredDays = getDaysForScore(sizeKey, desiredScore);
-
-                    if (requiredDays) {
-                        const weeks = requiredDays / 7; // Use 7 for calendar days
-                        timeByScoreResult.innerHTML = `<span class="block">${requiredDays} days</span><span class="text-base font-normal text-gray-500">(${weeks.toFixed(1)} wks)</span>`;
-                    } else {
-                         if (['2XL', '3XL', '4XL'].includes(sizeKey)) {
-                             timeByScoreResult.textContent = 'Only a score of 4 is defined.';
-                         } else {
-                             timeByScoreResult.textContent = 'Score not applicable.';
-                         }
-                        timeByScoreResult.classList.add('text-red-500');
-                    }
-                } else {
-                    timeByScoreResult.textContent = 'Invalid project hours.';
-                    timeByScoreResult.classList.add('text-red-500');
-                }
-            });
+            opcoSelect.addEventListener('change', checkTPP);
+            voltageSelect.addEventListener('change', checkTPP);
 
             calculateNeededByBtn.addEventListener('click', () => {
                 neededByDateResult.classList.remove('text-red-500');
@@ -742,7 +647,6 @@
                 const submitDateStr = submitDateInput.value;
                 if (!submitDateStr) {
                     neededByDateResult.textContent = 'Select submit date.';
-                    neededByDateResult.classList.add('text-red-500');
                     return;
                 }
                 const submitDate = new Date(submitDateStr + 'T00:00:00Z');
@@ -760,7 +664,6 @@
                 const neededBackDateStr = neededBackDateInput.value;
                  if (!neededBackDateStr) {
                     submitByDateResult.textContent = 'Select needed date.';
-                    submitByDateResult.classList.add('text-red-500');
                     return;
                 }
                 const neededBackDate = new Date(neededBackDateStr + 'T00:00:00Z');
@@ -774,4 +677,3 @@
     </script>
 </body>
 </html>
-
