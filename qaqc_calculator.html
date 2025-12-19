@@ -270,10 +270,10 @@
             <div class="collapsible-content">
                  <div class="px-8 pb-8 pt-6 border-t border-gray-200">
                     
-                    <div class="flex space-x-6 border-b border-gray-200 mb-6">
-                        <button class="tab-btn active pb-3 px-1 text-sm font-medium focus:outline-none" onclick="switchTab('tab-processing')">Processing Time</button>
-                        <button class="tab-btn pb-3 px-1 text-sm font-medium focus:outline-none" onclick="switchTab('tab-scoring')">Scoring Criteria</button>
-                        <button class="tab-btn pb-3 px-1 text-sm font-medium focus:outline-none" onclick="switchTab('tab-tpp')">TPP Matrix</button>
+                    <div class="flex space-x-6 border-b border-gray-200 mb-6 overflow-x-auto">
+                        <button class="tab-btn active pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-processing')">Processing Time</button>
+                        <button class="tab-btn pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-scoring')">Scoring Criteria</button>
+                        <button class="tab-btn pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-tpp')">TPP Matrix</button>
                     </div>
 
                     <div id="tab-processing" class="tab-content block">
@@ -310,24 +310,49 @@
                                     <tr><td class="score-4 font-bold">4</td><td>H:0, M:1, L:3</td></tr>
                                     <tr><td class="score-3 font-bold">3</td><td>H:0, M:5, L:10</td></tr>
                                     <tr><td class="score-2 font-bold">2</td><td>H:1, M:10, L:15</td></tr>
+                                    <tr><td class="score-1 font-bold">1</td><td>H:2+, M:11+, L:16+</td></tr>
                                     
                                     <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">M (500-1499 hrs)</td></tr>
                                     <tr><td class="score-5 font-bold">5</td><td>H:0, M:0, L:0</td></tr>
                                     <tr><td class="score-4 font-bold">4</td><td>H:0, M:2, L:5</td></tr>
                                     <tr><td class="score-3 font-bold">3</td><td>H:1, M:10, L:15</td></tr>
                                     <tr><td class="score-2 font-bold">2</td><td>H:2, M:15, L:20</td></tr>
+                                    <tr><td class="score-1 font-bold">1</td><td>H:3+, M:16+, L:21+</td></tr>
 
                                     <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">L (1500-3999 hrs)</td></tr>
                                     <tr><td class="score-5 font-bold">5</td><td>H:0, M:1, L:5</td></tr>
                                     <tr><td class="score-4 font-bold">4</td><td>H:1, M:3, L:10</td></tr>
                                     <tr><td class="score-3 font-bold">3</td><td>H:2, M:15, L:20</td></tr>
                                     <tr><td class="score-2 font-bold">2</td><td>H:3, M:20, L:25</td></tr>
+                                    <tr><td class="score-1 font-bold">1</td><td>H:4+, M:21+, L:26+</td></tr>
 
                                     <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">XL (4000-7499 hrs)</td></tr>
                                     <tr><td class="score-5 font-bold">5</td><td>H:0, M:2, L:8</td></tr>
                                     <tr><td class="score-4 font-bold">4</td><td>H:1, M:6, L:15</td></tr>
                                     <tr><td class="score-3 font-bold">3</td><td>H:3, M:20, L:25</td></tr>
                                     <tr><td class="score-2 font-bold">2</td><td>H:4, M:27, L:33</td></tr>
+                                    <tr><td class="score-1 font-bold">1</td><td>H:5+, M:28+, L:34+</td></tr>
+
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">2XL (7500-9999 hrs)</td></tr>
+                                    <tr><td class="score-5 font-bold">5</td><td>H:0-2, M:0-4, L:0-12</td></tr>
+                                    <tr><td class="score-4 font-bold">4</td><td>H:3, M:5-9, L:13-25</td></tr>
+                                    <tr><td class="score-3 font-bold">3</td><td>H:4-6, M:10-25, L:26-36</td></tr>
+                                    <tr><td class="score-2 font-bold">2</td><td>H:7-10, M:26-36, L:37-45</td></tr>
+                                    <tr><td class="score-1 font-bold">1</td><td>H:11+, M:37+, L:46+</td></tr>
+
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">3XL (10,000-14,999 hrs)</td></tr>
+                                    <tr><td class="score-5 font-bold">5</td><td>H:0-3, M:0-6, L:0-16</td></tr>
+                                    <tr><td class="score-4 font-bold">4</td><td>H:4-5, M:7-12, L:17-30</td></tr>
+                                    <tr><td class="score-3 font-bold">3</td><td>H:7-9, M:13-30, L:31-41</td></tr>
+                                    <tr><td class="score-2 font-bold">2</td><td>H:10-13, M:31-40, L:41-49</td></tr>
+                                    <tr><td class="score-1 font-bold">1</td><td>H:14+, M:41+, L:50+</td></tr>
+
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">4XL (15,000+ hrs)</td></tr>
+                                    <tr><td class="score-5 font-bold">5</td><td>H:0-5, M:0-8, L:0-20</td></tr>
+                                    <tr><td class="score-4 font-bold">4</td><td>H:6-8, M:9-15, L:21-35</td></tr>
+                                    <tr><td class="score-3 font-bold">3</td><td>H:9-11, M:16-35, L:36-45</td></tr>
+                                    <tr><td class="score-2 font-bold">2</td><td>H:12-16, M:36-46, L:46-55</td></tr>
+                                    <tr><td class="score-1 font-bold">1</td><td>H:17+, M:46+, L:56+</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -341,20 +366,20 @@
                                     <tr>
                                         <th class="text-left">OpCo</th>
                                         <th>765kV</th><th>500kV</th><th>345kV</th><th>230kV</th><th>138kV</th>
-                                        <th>115kV</th><th>69kV</th><th>46kV</th><th>34kV</th><th>23kV</th>
+                                        <th>115kV</th><th>69kV</th><th>46kV</th><th>36kV</th><th>34kV</th><th>25kV</th><th>23kV</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr><td class="text-left font-bold">CE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
-                                    <tr><td class="text-left font-bold">JC</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td></tr>
-                                    <tr><td class="text-left font-bold">ME</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td></tr>
-                                    <tr><td class="text-left font-bold">MP</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td></tr>
-                                    <tr><td class="text-left font-bold">OE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td></tr>
-                                    <tr><td class="text-left font-bold">PE</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td></tr>
-                                    <tr><td class="text-left font-bold">PN</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td></tr>
-                                    <tr><td class="text-left font-bold">PP</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td></tr>
-                                    <tr><td class="text-left font-bold">TE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td></tr>
-                                    <tr><td class="text-left font-bold">WP</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td></tr>
+                                    <tr><td class="text-left font-bold">CE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr><td class="text-left font-bold">JC</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td></tr>
+                                    <tr><td class="text-left font-bold">ME</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr><td class="text-left font-bold">MP</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td></tr>
+                                    <tr><td class="text-left font-bold">OE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td></tr>
+                                    <tr><td class="text-left font-bold">PE</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td></tr>
+                                    <tr><td class="text-left font-bold">PN</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr><td class="text-left font-bold">PP</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                    <tr><td class="text-left font-bold">TE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td></tr>
+                                    <tr><td class="text-left font-bold">WP</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -372,18 +397,14 @@
     <script>
         // --- TAB SWITCHER LOGIC ---
         function switchTab(tabId) {
-            // 1. Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('block'));
             
-            // 2. Remove active class from all buttons
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             
-            // 3. Show selected tab
             document.getElementById(tabId).classList.remove('hidden');
             document.getElementById(tabId).classList.add('block');
             
-            // 4. Add active class to clicked button
             event.target.classList.add('active');
         }
 
@@ -439,6 +460,7 @@
             };
 
             // --- DATA: TPP MATRIX ---
+            // 'Yes' values from the TPP table
             const tppMatrix = {
                 'CE': [345, 138, 36],
                 'JC': [500, 230, 115, 34],
