@@ -3,440 +3,848 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FirstEnergy Procurement Lead Time Calculator</title>
+    <title>FirstEnergy QAQC Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display.swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+        body { font-family: 'Inter', sans-serif; }
         .calculator-card {
             background-color: white;
             border-radius: 0.75rem;
-            padding: 2rem;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease-in-out;
+            overflow: hidden;
         }
-        /* Custom styles for brand colors */
-        .btn-brand {
-            background-color: #a1805b; /* Dashiell Mustard Gold */
-            color: white;
+        .collapsible-card { padding: 0 !important; }
+        .btn-brand { background-color: #005a9e; color: white; }
+        .btn-brand:hover { background-color: #004a83; }
+        .text-brand { color: #005a9e; }
+        .focus-brand:focus { --tw-ring-color: #005a9e; }
+        .result-box {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-        .btn-brand:hover {
-            background-color: #8f7150; /* Darker shade for hover */
+        .result-box-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+            display: block;
         }
-        .text-brand {
-            color: #a1805b;
+        .result-box-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #111827;
+            min-height: 2.75rem;
         }
-        .focus-brand:focus {
-            --tw-ring-color: #a1805b;
+        .score-5 { color: #16a34a; }
+        .score-4 { color: #2563eb; }
+        .score-3 { color: #ca8a04; }
+        .score-2 { color: #ea580c; }
+        .score-1 { color: #dc2626; }
+        
+        /* Table Styles */
+        table thead th { background-color: #f3f4f6; }
+        td, th { padding: 0.75rem; border-bottom: 1px solid #e5e7eb; }
+        
+        .collapsible-toggle {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem;
         }
-        /* Animation for the note alert */
-        .fade-in {
-            animation: fadeIn 0.3s ease-in;
+        .collapsible-content {
+            max-height: 3000px;
+            overflow: hidden;
+            transition: max-height 0.4s ease-in-out;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
+        .is-collapsed .collapsible-content {
+            max-height: 0;
+            border-top: none;
+        }
+        .chevron-icon { transition: transform 0.3s ease-in-out; }
+        .is-collapsed .chevron-icon { transform: rotate(-180deg); }
+        
+        /* Badge Styles for TPP */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        .badge-gray { background-color: #f3f4f6; color: #4b5563; }
+        .badge-green { background-color: #dcfce7; color: #166534; }
+
+        /* Tab Styles */
+        .tab-btn {
+            border-bottom: 2px solid transparent;
+            color: #6b7280;
+        }
+        .tab-btn.active {
+            border-bottom-color: #005a9e;
+            color: #005a9e;
+            font-weight: 600;
         }
     </style>
 </head>
 <body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-4xl">
-        
-        <div class="mb-6 flex justify-center">
-            <a href="https://firstenergycorp.sharepoint.com.mcas.ms/sites/tse/SitePages/Home.aspx" 
-               target="_blank" 
-               class="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 font-medium py-2 px-5 rounded-full shadow-sm hover:bg-gray-50 hover:text-brand hover:border-gray-400 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                FirstEnergy Sharepoint: Equipment and Standards Home
-            </a>
-        </div>
-        <div class="flex items-center justify-center mb-8 gap-6 text-left">
-            <img src="logo.png" alt="Dashiell Corp Logo" class="h-20 w-auto" onerror="this.style.display='none'">
+    <div class="w-full max-w-4xl space-y-8">
+        <div class="flex items-center justify-center gap-6 text-left">
+            <img src="logo.png" alt="Dashiell Corp Logo" class="h-20 w-auto">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800">FirstEnergy Procurement Lead Time Calculator</h1>
-                <p class="text-gray-600 mt-1">Select a material to calculate order and delivery dates.</p>
-                <p id="last-updated" class="text-sm text-gray-500 mt-2"></p>
+                <h1 class="text-3xl font-bold text-gray-800">FirstEnergy QAQC Calculator</h1>
+                <p class="text-gray-600 mt-1">Estimate review times, calculate grades, and check TPP criteria.</p>
+                <p class="text-sm text-gray-500 mt-1">
+                    <em>References latest guidance from September 16, 2025.</em> 
+                    <a href="FW_ Action_ QAQC review durations - Current and In-Flight guidance.msg" target="_blank" class="text-brand font-medium hover:underline ml-2">View Source Email &rarr;</a>
+                </p>
             </div>
         </div>
 
-        <div class="calculator-card mb-8">
-            <label for="material-select" class="block text-sm font-medium text-gray-700 mb-2">Select Material</label>
-            <select id="material-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand focus:border-indigo-500">
-                <option>Loading lead times...</option>
-            </select>
-            
-            <div id="note-container" class="hidden mt-4 p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 rounded-r shadow-sm fade-in flex items-start">
-                <svg class="w-5 h-5 mr-2 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span id="note-text" class="font-medium"></span>
-            </div>
-
-            <div id="link-container" class="mt-4 text-center border-t pt-4" style="display: none;">
+        <div class="bg-blue-50 border border-blue-100 rounded-lg p-6 text-sm text-blue-900">
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+                How to use this tool
+            </h3>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div>
+                    <span class="font-bold block mb-1 text-blue-800">1. To Estimate Time:</span>
+                    Enter the Total Project Design Hours in the box below and click <strong>"Calculate Review Time"</strong>. This sets the timelines in the top boxes.
                 </div>
+                <div>
+                    <span class="font-bold block mb-1 text-blue-800">2. To Calculate Grade:</span>
+                    Expand the <strong>"Calculate Project Score"</strong> section. Enter your duration given and error counts to calculate your exact grades.
+                </div>
+                <div>
+                    <span class="font-bold block mb-1 text-blue-800">3. To Find Deadlines:</span>
+                    First complete Step 1 to set the duration. Then expand the <strong>"Date Calculators"</strong> section to determine when to submit or when you'll get it back based on the Expected R&C.
+                </div>
+            </div>
+        </div>
+
+        <div class="calculator-card p-8">
+            <div class="space-y-6">
+                <div>
+                    <label for="engineering-hours" class="block text-lg font-medium text-gray-800 mb-2">Total Project Design Hours</label>
+                    <input type="number" id="engineering-hours" placeholder="e.g., 3000" class="mt-1 w-full p-4 border border-gray-300 rounded-lg text-lg focus:ring-2 focus-brand">
+                </div>
+
+                <button id="calculate-btn" class="w-full btn-brand font-semibold py-4 px-4 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">
+                    Calculate Review Time & Size
+                </button>
+
+                <div class="grid md:grid-cols-3 gap-6 pt-4 border-t">
+                     <div class="result-box">
+                         <span class="result-box-label">Project Size</span>
+                         <p id="project-size-result" class="result-box-value text-brand">-</p>
+                     </div>
+                     <div class="result-box bg-gray-50">
+                         <span class="result-box-label">Est. Physical Review</span>
+                         <p id="physical-review-result" class="result-box-value">-</p>
+                     </div>
+                     <div class="result-box bg-blue-50 border-blue-200">
+                         <span class="result-box-label">Expected R&C Review</span>
+                         <p id="rc-review-result" class="result-box-value text-blue-900">-</p>
+                     </div>
+                </div>
+                 <div id="discussion-note" class="text-center text-amber-600 font-semibold pt-4" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="calculator-card collapsible-card">
+            <div class="collapsible-toggle">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Calculate Project Score & TPP</h2>
+                </div>
+                <svg class="chevron-icon w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </div>
+            <div class="collapsible-content">
+                <div class="px-8 pb-8 pt-6 border-t border-gray-200">
+                    
+                    <div class="bg-gray-50 p-6 rounded-lg mb-8 border border-gray-300">
+                        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">TPP Checker</h3>
+                        <div class="flex flex-col md:flex-row gap-4 items-end">
+                            <div class="flex-1 w-full">
+                                <label for="opco-select" class="block text-sm font-medium text-gray-700 mb-1">Operating Company (OpCo)</label>
+                                <select id="opco-select" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                                    <option value="">Select OpCo...</option>
+                                    <option value="CE">CE</option>
+                                    <option value="JC">JC</option>
+                                    <option value="ME">ME</option>
+                                    <option value="MP">MP</option>
+                                    <option value="OE">OE</option>
+                                    <option value="PE">PE</option>
+                                    <option value="PN">PN</option>
+                                    <option value="PP">PP</option>
+                                    <option value="TE">TE</option>
+                                    <option value="WP">WP</option>
+                                </select>
+                            </div>
+                            <div class="flex-1 w-full">
+                                <label for="voltage-select" class="block text-sm font-medium text-gray-700 mb-1">Voltage (kV)</label>
+                                <select id="voltage-select" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                                    <option value="">Select kV...</option>
+                                    <option value="765">765 kV</option>
+                                    <option value="500">500 kV</option>
+                                    <option value="345">345 kV</option>
+                                    <option value="230">230 kV</option>
+                                    <option value="138">138 kV</option>
+                                    <option value="115">115 kV</option>
+                                    <option value="69">69 kV</option>
+                                    <option value="46">46 kV</option>
+                                    <option value="36">36 kV</option>
+                                    <option value="34">34 kV</option>
+                                    <option value="25">25 kV</option>
+                                    <option value="23">23 kV</option>
+                                </select>
+                            </div>
+                            <div class="mb-1">
+                                <span id="tpp-badge" class="badge badge-gray">TPP Check: Pending</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Duration Given input -->
+                    <div class="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg flex flex-col md:flex-row gap-6 items-center">
+                        <div class="w-full md:w-1/2">
+                            <label class="block text-sm font-bold text-blue-900 mb-1">QAQC Duration Given (Days)</label>
+                            <p class="text-xs text-blue-700 mb-2">Requested need date minus Received date</p>
+                            <input type="number" id="duration-given" placeholder="e.g., 40" min="0" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                        </div>
+                        <div class="w-full md:w-1/2 text-sm text-blue-800 md:border-l-2 md:border-blue-200 md:pl-6">
+                            <h4 class="font-bold mb-1">How it's scored:</h4>
+                            <p>Enter the actual number of calendar days given to the QAQC team for their review. The calculator uses the <em>QAQC Duration Matrix</em> to assign a <strong>Duration Grade (1-5)</strong> based on your project's size.</p>
+                        </div>
+                    </div>
+
+                    <!-- Errors input -->
+                    <div class="grid md:grid-cols-3 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-bold text-red-600 mb-1">High Errors</label>
+                            <input type="number" id="errors-h" value="0" min="0" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-orange-500 mb-1">Medium Errors</label>
+                            <input type="number" id="errors-m" value="0" min="0" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-blue-500 mb-1">Low Errors</label>
+                            <input type="number" id="errors-l" value="0" min="0" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                        </div>
+                    </div>
+
+                    <button id="calculate-score-btn" class="w-full bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-900 transition mb-6">
+                        Calculate Final Grades
+                    </button>
+
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="result-box bg-gray-50">
+                            <span class="result-box-label">Quality Grade (Errors)</span>
+                            <p id="final-quality-score" class="text-4xl font-bold text-gray-400">-</p>
+                        </div>
+                        <div class="result-box bg-gray-50">
+                            <span class="result-box-label">Duration Grade</span>
+                            <p id="final-duration-score" class="text-4xl font-bold text-gray-400">-</p>
+                        </div>
+                    </div>
+                    <p id="score-reason" class="text-sm text-center text-gray-500 mt-4">Enter hours, duration, and errors to calculate.</p>
+
+                </div>
+            </div>
         </div>
 
         <div class="grid md:grid-cols-2 gap-8">
-            <div class="calculator-card">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">1. Calculate Delivery Date</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label for="order-date" class="block text-sm font-medium text-gray-700">If I order on...</label>
-                        <input type="date" id="order-date" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand focus:border-indigo-500">
-                    </div>
-                    <button id="calculate-delivery-btn" class="w-full btn-brand font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">
-                        Calculate Estimated Delivery
-                    </button>
-                    <div>
-                        <p class="text-sm text-gray-600">Estimated Delivery Date:</p>
-                        <p id="delivery-date-result" class="text-lg font-bold text-brand h-8 flex items-center"></p>
+            <div class="calculator-card collapsible-card">
+                 <div class="collapsible-toggle">
+                    <h2 class="text-xl font-semibold text-gray-800">1. Calculate Needed Back Date</h2>
+                    <svg class="chevron-icon w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </div>
+                <div class="collapsible-content">
+                    <div class="px-8 pb-8 pt-6 border-t border-gray-200">
+                        <div class="space-y-4">
+                            <div>
+                                <label for="submit-date" class="block text-sm font-medium text-gray-700">If I submit on...</label>
+                                <input type="date" id="submit-date" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                            </div>
+                            <button id="calculate-needed-by-btn" class="w-full btn-brand font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition">
+                                Calculate Needed Back Date
+                            </button>
+                            <div>
+                                <p class="text-sm text-gray-600">You should get it back by:</p>
+                                <p id="needed-by-date-result" class="text-lg font-bold text-brand h-8 flex items-center"></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="calculator-card">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">2. Calculate "Order By" Date</h2>
-                 <div class="space-y-4">
-                    <div>
-                        <label for="delivery-date" class="block text-sm font-medium text-gray-700">I need it delivered by...</label>
-                        <input type="date" id="delivery-date" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand focus:border-indigo-500">
-                    </div>
-                    <button id="calculate-order-by-btn" class="w-full bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition">
-                        Calculate "Order By" Deadline
-                    </button>
-                    <div>
-                        <p class="text-sm text-gray-600">You need to order by:</p>
-                        <p id="order-by-date-result" class="text-lg font-bold text-gray-700 h-8 flex items-center"></p>
-                    </div>
+            <div class="calculator-card collapsible-card">
+                <div class="collapsible-toggle">
+                    <h2 class="text-xl font-semibold text-gray-800">2. Calculate "Submit By" Date</h2>
+                    <svg class="chevron-icon w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                 </div>
-            </div>
-        </div>
-
-        <div class="calculator-card mt-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center border-b pb-4">3. Custom Lead Time Calculator</h2>
-            <div class="grid md:grid-cols-2 gap-8">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Calculate Delivery Date</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label for="custom-weeks-delivery" class="block text-sm font-medium text-gray-700">Lead Time (in weeks)</label>
-                            <input type="number" id="custom-weeks-delivery" placeholder="e.g., 25" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
-                        </div>
-                        <div>
-                            <label for="custom-order-date" class="block text-sm font-medium text-gray-700">If I order on...</label>
-                            <input type="date" id="custom-order-date" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
-                        </div>
-                        <button id="custom-calculate-delivery-btn" class="w-full btn-brand font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">
-                            Calculate Estimated Delivery
-                        </button>
-                        <div>
-                            <p class="text-sm text-gray-600">Estimated Delivery Date:</p>
-                            <p id="custom-delivery-date-result" class="text-lg font-bold text-brand h-8 flex items-center"></p>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Calculate "Order By" Date</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label for="custom-weeks-order-by" class="block text-sm font-medium text-gray-700">Lead Time (in weeks)</label>
-                            <input type="number" id="custom-weeks-order-by" placeholder="e.g., 25" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
-                        </div>
-                        <div>
-                            <label for="custom-delivery-date" class="block text-sm font-medium text-gray-700">I need it delivered by...</label>
-                            <input type="date" id="custom-delivery-date" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
-                        </div>
-                        <button id="custom-calculate-order-by-btn" class="w-full bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition">
-                            Calculate "Order By" Deadline
-                        </button>
-                        <div>
-                            <p class="text-sm text-gray-600">You need to order by:</p>
-                            <p id="custom-order-by-date-result" class="text-lg font-bold text-gray-700 h-8 flex items-center"></p>
+                <div class="collapsible-content">
+                    <div class="px-8 pb-8 pt-6 border-t border-gray-200">
+                         <div class="space-y-4">
+                            <div>
+                                <label for="needed-back-date" class="block text-sm font-medium text-gray-700">I need it back by...</label>
+                                <input type="date" id="needed-back-date" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                            </div>
+                            <button id="calculate-submit-by-btn" class="w-full bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition">
+                                Calculate "Submit By" Deadline
+                            </button>
+                            <div>
+                                <p class="text-sm text-gray-600">You need to submit by:</p>
+                                <p id="submit-by-date-result" class="text-lg font-bold text-gray-700 h-8 flex items-center"></p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="text-center mt-8 pt-8 border-t space-x-4">
-            <a href="qaqc_calculator.html" class="inline-block bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-lg hover:bg-gray-300 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
-                Go to QAQC Review Time Calculator
+        <div class="calculator-card collapsible-card is-collapsed">
+            <div class="collapsible-toggle">
+                <h2 class="text-xl font-semibold text-gray-800">Reference Tables & Guidelines</h2>
+                 <svg class="chevron-icon w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </div>
+            <div class="collapsible-content">
+                 <div class="px-8 pb-8 pt-6 border-t border-gray-200">
+                    
+                    <div class="flex space-x-6 border-b border-gray-200 mb-6 overflow-x-auto">
+                        <button class="tab-btn active pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-processing')">Review Times</button>
+                        <button class="tab-btn pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-duration-scoring')">QAQC Duration Scoring</button>
+                        <button class="tab-btn pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-error-scoring')">Error Scoring Criteria</button>
+                        <button class="tab-btn pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-tpp')">TPP Matrix & Guidelines</button>
+                    </div>
+
+                    <div id="tab-processing" class="tab-content block">
+                        <p class="text-sm text-gray-500 mb-4">Estimated Physical and Expected R&C Review Durations based on Project Size.</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr>
+                                        <th class="font-semibold text-gray-700">Size</th>
+                                        <th class="font-semibold text-gray-700">Total Project Eng. Hrs.</th>
+                                        <th class="font-semibold text-gray-700">Estimated Physical Review</th>
+                                        <th class="font-semibold text-gray-700">Expected R&C Review (Score 5)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td class="font-bold">S</td><td>&lt; 500 hrs.</td><td>4 weeks</td><td>31 days</td></tr>
+                                    <tr><td class="font-bold">M</td><td>501–2,500 hrs.</td><td>5 weeks</td><td>61 days</td></tr>
+                                    <tr><td class="font-bold">L</td><td>2,501–5,000 hrs.</td><td>6 weeks</td><td>76 days</td></tr>
+                                    <tr><td class="font-bold">XL</td><td>5,001–7,500 hrs.</td><td>7 weeks</td><td>92 days</td></tr>
+                                    <tr><td class="font-bold">XXL (2XL)</td><td>7,501–10,000 hrs.</td><td>8+ weeks</td><td>84+ days (discussion required)</td></tr>
+                                    <tr><td class="font-bold">XXXL (3XL+)</td><td>&gt;10,001 hrs.</td><td>9+ weeks (discussion required)</td><td>84+ days (discussion required)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="tab-duration-scoring" class="tab-content hidden">
+                        <p class="text-sm text-gray-500 mb-4">Days given for QAQC review (Requested need date – Received date).</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-center border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-gray-200">
+                                        <th class="p-2 border font-bold">Score</th><th class="p-2 border">S</th><th class="p-2 border">M</th>
+                                        <th class="p-2 border">L</th><th class="p-2 border">XL</th><th class="p-2 border">2XL</th>
+                                        <th class="p-2 border">3XL</th><th class="p-2 border">4XL</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td class="font-bold border bg-gray-100 score-5">5</td><td class="border">31</td><td class="border text-red-600">61</td><td class="border text-red-600">76</td><td class="border text-red-600">92</td><td rowspan="5" colspan="3" class="border bg-gray-50 text-red-600 font-bold">84+ days<br>(Discussion w/ QAQC needed)</td></tr>
+                                    <tr><td class="font-bold border bg-gray-100 score-4">4</td><td class="border">28</td><td class="border text-red-600">56</td><td class="border text-red-600">70</td><td class="border text-red-600">84</td></tr>
+                                    <tr><td class="font-bold border bg-gray-100 score-3">3</td><td class="border">26</td><td class="border text-red-600">52</td><td class="border text-red-600">65</td><td class="border text-red-600">77</td></tr>
+                                    <tr><td class="font-bold border bg-gray-100 score-2">2</td><td class="border">23</td><td class="border text-red-600">48</td><td class="border text-red-600">60</td><td class="border text-red-600">70</td></tr>
+                                    <tr><td class="font-bold border bg-gray-100 score-1">1</td><td class="border">20</td><td class="border text-red-600">44</td><td class="border text-red-600">55</td><td class="border text-red-600">63</td></tr>
+                                </tbody>
+                            </table>
+                            <p class="text-xs text-gray-500 mt-2 italic">(Full points awarded with a score of a 4. Bonus points for any score above 4.)</p>
+                        </div>
+                    </div>
+
+                    <div id="tab-error-scoring" class="tab-content hidden">
+                        <p class="text-sm text-gray-500 mb-4">Maximum allowed errors per score category.</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr>
+                                        <th class="font-semibold text-gray-700">Score</th>
+                                        <th class="font-semibold text-gray-700">Criteria (High / Med / Low)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">S (0-500 hrs)</td></tr>
+                                    <tr><td class="score-5 font-bold">5</td><td>H:0, M:0, L:0</td></tr>
+                                    <tr><td class="score-4 font-bold">4</td><td>H:0, M:1, L:3</td></tr>
+                                    <tr><td class="score-3 font-bold">3</td><td>H:0, M:5, L:10</td></tr>
+                                    <tr><td class="score-2 font-bold">2</td><td>H:1, M:10, L:15</td></tr>
+                                    <tr><td class="score-1 font-bold">1</td><td>H:2+, M:11+, L:16+</td></tr>
+                                    
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">M (501-2,500 hrs)</td></tr>
+                                    <tr><td class="score-5 font-bold">5</td><td>H:0, M:0, L:0</td></tr>
+                                    <tr><td class="score-4 font-bold">4</td><td>H:0, M:2, L:5</td></tr>
+                                    <tr><td class="score-3 font-bold">3</td><td>H:1, M:10, L:15</td></tr>
+                                    <tr><td class="score-2 font-bold">2</td><td>H:2, M:15, L:20</td></tr>
+                                    <tr><td class="score-1 font-bold">1</td><td>H:3+, M:16+, L:21+</td></tr>
+
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">L (2,501-5,000 hrs)</td></tr>
+                                    <tr><td class="score-5 font-bold">5</td><td>H:0, M:1, L:5</td></tr>
+                                    <tr><td class="score-4 font-bold">4</td><td>H:1, M:3, L:10</td></tr>
+                                    <tr><td class="score-3 font-bold">3</td><td>H:2, M:15, L:20</td></tr>
+                                    <tr><td class="score-2 font-bold">2</td><td>H:3, M:20, L:25</td></tr>
+                                    <tr><td class="score-1 font-bold">1</td><td>H:4+, M:21+, L:26+</td></tr>
+
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">XL (5,001-7,500 hrs)</td></tr>
+                                    <tr><td class="score-5 font-bold">5</td><td>H:0, M:2, L:8</td></tr>
+                                    <tr><td class="score-4 font-bold">4</td><td>H:1, M:6, L:15</td></tr>
+                                    <tr><td class="score-3 font-bold">3</td><td>H:3, M:20, L:25</td></tr>
+                                    <tr><td class="score-2 font-bold">2</td><td>H:4, M:27, L:33</td></tr>
+                                    <tr><td class="score-1 font-bold">1</td><td>H:5+, M:28+, L:34+</td></tr>
+
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">2XL (7,501-10,000 hrs)</td></tr>
+                                    <tr><td class="score-5 font-bold">5</td><td>H:0-2, M:0-4, L:0-12</td></tr>
+                                    <tr><td class="score-4 font-bold">4</td><td>H:3, M:5-9, L:13-25</td></tr>
+                                    <tr><td class="score-3 font-bold">3</td><td>H:4-6, M:10-25, L:26-36</td></tr>
+                                    <tr><td class="score-2 font-bold">2</td><td>H:7-10, M:26-36, L:37-45</td></tr>
+                                    <tr><td class="score-1 font-bold">1</td><td>H:11+, M:37+, L:46+</td></tr>
+
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">3XL (10,001-14,999 hrs)</td></tr>
+                                    <tr><td class="score-5 font-bold">5</td><td>H:0-3, M:0-6, L:0-16</td></tr>
+                                    <tr><td class="score-4 font-bold">4</td><td>H:4-5, M:7-12, L:17-30</td></tr>
+                                    <tr><td class="score-3 font-bold">3</td><td>H:7-9, M:13-30, L:31-41</td></tr>
+                                    <tr><td class="score-2 font-bold">2</td><td>H:10-13, M:31-40, L:41-49</td></tr>
+                                    <tr><td class="score-1 font-bold">1</td><td>H:14+, M:41+, L:50+</td></tr>
+
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">4XL (15,000+ hrs)</td></tr>
+                                    <tr><td class="score-5 font-bold">5</td><td>H:0-5, M:0-8, L:0-20</td></tr>
+                                    <tr><td class="score-4 font-bold">4</td><td>H:6-8, M:9-15, L:21-35</td></tr>
+                                    <tr><td class="score-3 font-bold">3</td><td>H:9-11, M:16-35, L:36-45</td></tr>
+                                    <tr><td class="score-2 font-bold">2</td><td>H:12-16, M:36-46, L:46-55</td></tr>
+                                    <tr><td class="score-1 font-bold">1</td><td>H:17+, M:46+, L:56+</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="tab-tpp" class="tab-content hidden">
+                        <div class="mb-8">
+                            <h3 class="font-bold text-gray-800 mb-2">1. Voltage/OpCo Matrix</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-center border-collapse text-xs">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-left">OpCo</th>
+                                            <th>765kV</th><th>500kV</th><th>345kV</th><th>230kV</th><th>138kV</th>
+                                            <th>115kV</th><th>69kV</th><th>46kV</th><th>36kV</th><th>34kV</th><th>25kV</th><th>23kV</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td class="text-left font-bold">CE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td></tr>
+                                        <tr><td class="text-left font-bold">JC</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td></tr>
+                                        <tr><td class="text-left font-bold">ME</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                        <tr><td class="text-left font-bold">MP</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td></tr>
+                                        <tr><td class="text-left font-bold">OE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td></tr>
+                                        <tr><td class="text-left font-bold">PE</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td></tr>
+                                        <tr><td class="text-left font-bold">PN</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                        <tr><td class="text-left font-bold">PP</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                                        <tr><td class="text-left font-bold">TE</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td>-</td></tr>
+                                        <tr><td class="text-left font-bold">WP</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td><td class="bg-yellow-100 font-bold">Yes</td><td class="bg-yellow-100 font-bold">Yes</td><td>-</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="pt-6 border-t border-gray-200">
+                             <h3 class="font-bold text-gray-800 mb-4">2. Detailed Scope Guidelines</h3>
+                             <div class="bg-gray-50 p-4 rounded text-sm text-gray-700 space-y-4">
+                                <p>The below guidelines help determine if updated onelines must be sent to TPP for review & approval. If the scope of work includes <strong>anything</strong> in the applicable list below, then it must be sent in for review.</p>
+                                
+                                <div class="pl-4">
+                                    <h4 class="font-bold text-blue-900 mb-2">Applicable – components INCLUDE:</h4>
+                                    <ul class="list-disc pl-5 space-y-1">
+                                        <li><strong>Topology Change</strong>
+                                            <ul class="list-circle pl-5 mt-1 text-gray-600">
+                                                <li>New/Removal Substation</li>
+                                                <li>Adding/Moving Line Terminal</li>
+                                                <li>Bus reconfiguration</li>
+                                                <li>New/Reconductoring Transmission Line</li>
+                                            </ul>
+                                        </li>
+                                        <li class="mt-2"><strong>Adding/Removing/Replacing equipment</strong>
+                                            <ul class="list-circle pl-5 mt-1 text-gray-600 grid md:grid-cols-2 gap-x-4">
+                                                <li>Circuit breaker</li>
+                                                <li>Circuit switcher</li>
+                                                <li>Disconnect switch</li>
+                                                <li>Current transformer</li>
+                                                <li>Gas insulated bus</li>
+                                                <li>Substation conductor</li>
+                                                <li>Transmission line drop</li>
+                                                <li>Transmission line conductor</li>
+                                                <li>Wave trap</li>
+                                                <li>Fuse</li>
+                                                <li>Protective relays with phase CT inputs</li>
+                                                <li>Phase relay setting</li>
+                                                <li>Digital Fault Recorders (DFRs)</li>
+                                                <li>Phasor Measurement Unit (PMUs)</li>
+                                                <li>Metering devices with CT inputs</li>
+                                                <li>Transducers with CT inputs</li>
+                                                <li>Power transformer</li>
+                                                <li>Capacitor Bank</li>
+                                                <li>Reactor</li>
+                                                <li>Generator</li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <p class="text-xs text-gray-500 italic">Note: If the project scope is <strong>only</strong> listed in the not applicable list (not shown here), it does not need review.</p>
+                             </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-8 pt-8 border-t flex flex-col md:flex-row justify-center gap-4">
+            <a href="qaqc-bulk-analyzer.html" class="inline-block bg-blue-100 text-blue-800 border border-blue-200 font-semibold py-3 px-6 rounded-lg hover:bg-blue-200 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400">
+                Go to Bulk Schedule Analyzer
+            </a>
+            <a href="index.html" class="inline-block bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-lg hover:bg-gray-300 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
+                Go to Procurement Lead Time Calculator
             </a>
             <a href="milestone.html" class="inline-block bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-lg hover:bg-gray-300 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
-                Go to IFM Milestone
+                Go to IFM Milestone Calculator
             </a>
         </div>
-        
+
         <footer class="text-center text-gray-500 text-sm mt-8">
-            &copy; 2025 Dashiell Corp.
+            &copy; 2025 Dashiell Corp, for FirstEnergy.
         </footer>
     </div>
 
     <script>
+        // --- TAB SWITCHER LOGIC ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('block'));
+            
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId).classList.add('block');
+            
+            event.target.classList.add('active');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            // URL for your Google Sheet, published to the web as a CSV file.
-            const googleSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrfsD6iiZufaNtdn7CrtBm_S19RD0lDB62tX0eeur8yEP210Yr-p6aOnsxPO3hqATI-obYVt1Cydba/pub?gid=0&single=true&output=csv';
-
-            const materialSelect = document.getElementById('material-select');
-            const linkContainer = document.getElementById('link-container');
-            const noteContainer = document.getElementById('note-container'); // Note container
-            const noteText = document.getElementById('note-text'); // Note text span
-            const lastUpdatedElement = document.getElementById('last-updated');
-
-            function updateMaterialDetails() {
-                if (materialSelect.options.length === 0 || materialSelect.selectedIndex === -1) {
-                    linkContainer.style.display = 'none';
-                    noteContainer.classList.add('hidden');
-                    return;
-                }
-                const selectedOption = materialSelect.options[materialSelect.selectedIndex];
-                
-                // 1. Handle Link
-                const sourceInfo = selectedOption.dataset.link;
-                linkContainer.innerHTML = ''; // Clear previous content
-
-                if (sourceInfo && sourceInfo.trim() !== '' && sourceInfo !== 'undefined') {
-                    if (sourceInfo.trim().startsWith('http')) {
-                        const linkElement = document.createElement('a');
-                        linkElement.href = sourceInfo;
-                        linkElement.target = '_blank';
-                        linkElement.rel = 'noopener noreferrer';
-                        linkElement.className = 'inline-flex items-center gap-2 font-semibold text-brand hover:underline';
-                        linkElement.innerHTML = `
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><polyline points="10 2 10 10 13 7 16 10 16 2"/></svg>
-                            <span>View Lead Time Report</span>
-                        `;
-                        linkContainer.appendChild(linkElement);
-                    } else {
-                        const textElement = document.createElement('p');
-                        textElement.className = 'text-sm text-gray-600 italic';
-                        textElement.textContent = `Source: ${sourceInfo}`;
-                        linkContainer.appendChild(textElement);
-                    }
-                    linkContainer.style.display = 'block';
-                } else {
-                    linkContainer.style.display = 'none';
-                }
-
-                // 2. Handle Note (New Logic)
-                const note = selectedOption.dataset.note;
-                if (note && note.trim() !== '' && note !== 'undefined') {
-                    noteText.textContent = note;
-                    noteContainer.classList.remove('hidden');
-                } else {
-                    noteContainer.classList.add('hidden');
-                }
-            }
-
-            async function populateLeadTimes() {
-                materialSelect.disabled = true;
-
-                try {
-                    const response = await fetch(googleSheetUrl);
-                    if (!response.ok) {
-                        throw new Error('Could not fetch the Google Sheet. Check the link and sharing settings.');
-                    }
-                    const csvText = await response.text();
-                    
-                    // Improved splitting to handle CSV data better (regex handles commas inside quotes)
-                    const rows = csvText.trim().split('\n').slice(1).filter(row => row);
-
-                    let mostRecentDate = null; 
-
-                    const leadTimeData = rows.map(row => {
-                        // Regex to correctly split CSV by comma, ignoring commas inside quotes
-                        const columns = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                        
-                        const name = columns[0];
-                        const weeks = columns[1];
-                        const link = columns[2];
-                        const lastEdited = columns[3];
-                        const note = columns[4]; // Reading the NEW 5th column
-                        
-                        const cleanedName = name ? name.trim().replace(/^"|"$/g, '') : null;
-                        const cleanedWeeks = weeks ? parseInt(weeks.trim(), 10) : null;
-                        const cleanedLink = link ? link.trim().replace(/^"|"$/g, '') : null;
-                        const cleanedLastEdited = lastEdited ? lastEdited.trim().replace(/^"|"$/g, '') : null;
-                        const cleanedNote = note ? note.trim().replace(/^"|"$/g, '') : null; // Clean the note
-
-                        if (cleanedLastEdited) {
-                            const currentDate = new Date(cleanedLastEdited);
-                            if (!isNaN(currentDate.getTime())) {
-                                if (!mostRecentDate || currentDate > mostRecentDate) {
-                                    mostRecentDate = currentDate;
-                                }
-                            }
-                        }
-
-                        if (cleanedName && cleanedWeeks !== null && !isNaN(cleanedWeeks)) {
-                            // Return object including the new note
-                            return { 
-                                name: cleanedName, 
-                                weeks: cleanedWeeks, 
-                                link: cleanedLink, 
-                                note: cleanedNote 
-                            };
-                        }
-                        return null;
-                    }).filter(Boolean);
-
-                    if (leadTimeData.length === 0) {
-                        throw new Error('No valid data was found in the sheet.');
-                    }
-
-                    if (mostRecentDate) {
-                        lastUpdatedElement.textContent = `Lead times last updated on: ${formatDate(mostRecentDate)}`;
-                    } else {
-                        lastUpdatedElement.textContent = 'Last update time not available.';
-                    }
-
-                    materialSelect.innerHTML = '';
-                    
-                    leadTimeData.sort((a, b) => a.name.localeCompare(b.name));
-                    leadTimeData.forEach(item => {
-                        const option = document.createElement('option');
-                        option.value = item.weeks;
-                        if (item.link) option.dataset.link = item.link;
-                        if (item.note) option.dataset.note = item.note; // Attach note to option
-                        option.textContent = `${item.name} (${item.weeks} weeks)`;
-                        materialSelect.appendChild(option);
-                    });
-
-                    updateMaterialDetails();
-
-                } catch (error) {
-                    console.error('Error fetching or parsing lead times:', error);
-                    materialSelect.innerHTML = `<option>Error: Could not load data.</option>`;
-                    lastUpdatedElement.textContent = 'Could not verify update status.';
-                } finally {
-                    materialSelect.disabled = false;
-                }
-            }
+            // Main Calculator Elements
+            const engineeringHoursInput = document.getElementById('engineering-hours');
+            const calculateBtn = document.getElementById('calculate-btn');
+            const projectSizeResult = document.getElementById('project-size-result');
+            const physicalReviewResult = document.getElementById('physical-review-result');
+            const rcReviewResult = document.getElementById('rc-review-result');
+            const discussionNote = document.getElementById('discussion-note');
             
-            populateLeadTimes();
+            // Scoring Elements
+            const errorsH = document.getElementById('errors-h');
+            const errorsM = document.getElementById('errors-m');
+            const errorsL = document.getElementById('errors-l');
+            const durationGivenInput = document.getElementById('duration-given');
+            const calculateScoreBtn = document.getElementById('calculate-score-btn');
+            const finalQualityScoreResult = document.getElementById('final-quality-score');
+            const finalDurationScoreResult = document.getElementById('final-duration-score');
+            const scoreReason = document.getElementById('score-reason');
             
-            // Renamed function to be more descriptive
-            materialSelect.addEventListener('change', updateMaterialDetails);
+            // TPP Elements
+            const opcoSelect = document.getElementById('opco-select');
+            const voltageSelect = document.getElementById('voltage-select');
+            const tppBadge = document.getElementById('tpp-badge');
 
-            const formatDate = (date) => {
-                 if (!date || isNaN(date)) return 'Invalid Date';
-                return date.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    timeZone: 'UTC'
-                });
+            // Date Calculator Elements
+            const submitDateInput = document.getElementById('submit-date');
+            const calculateNeededByBtn = document.getElementById('calculate-needed-by-btn');
+            const neededByDateResult = document.getElementById('needed-by-date-result');
+            const neededBackDateInput = document.getElementById('needed-back-date');
+            const calculateSubmitByBtn = document.getElementById('calculate-submit-by-btn');
+            const submitByDateResult = document.getElementById('submit-by-date-result');
+
+            let activeReviewDaysForDates = null;
+            let currentCalculatedSize = null;
+            let isTPPActive = false;
+
+            // --- DATA: COMBINED SIZING MATRIX ---
+            // 'rc' maps to the "Score 5" days for that specific size
+            const hardcodedGuidelines = [
+                { size: 'S', min: 0, max: 500, physical: '4 Weeks', rc: '31 Days', rcNum: 31 },
+                { size: 'M', min: 501, max: 2500, physical: '5 Weeks', rc: '61 Days', rcNum: 61 },
+                { size: 'L', min: 2501, max: 5000, physical: '6 Weeks', rc: '76 Days', rcNum: 76 },
+                { size: 'XL', min: 5001, max: 7500, physical: '7 Weeks', rc: '92 Days', rcNum: 92 },
+                { size: '2XL', min: 7501, max: 10000, physical: '8+ Weeks', rc: '84+ Days', rcNum: 84 },
+                { size: '3XL', min: 10001, max: 14999, physical: '9+ Weeks', rc: '84+ Days', rcNum: 84 },
+                { size: '4XL', min: 15000, max: 9999999, physical: '9+ Weeks', rc: '84+ Days', rcNum: 84 }
+            ];
+
+            // --- DATA: SCORING MATRIX ---
+            const scoringCriteria = {
+                'S': { range: [0, 500], scores: { 5: { h: 0, m: 0, l: 0 }, 4: { h: 0, m: 1, l: 3 }, 3: { h: 0, m: 5, l: 10 }, 2: { h: 1, m: 10, l: 15 } } },
+                'M': { range: [501, 2500], scores: { 5: { h: 0, m: 0, l: 0 }, 4: { h: 0, m: 2, l: 5 }, 3: { h: 1, m: 10, l: 15 }, 2: { h: 2, m: 15, l: 20 } } },
+                'L': { range: [2501, 5000], scores: { 5: { h: 0, m: 1, l: 5 }, 4: { h: 1, m: 3, l: 10 }, 3: { h: 2, m: 15, l: 20 }, 2: { h: 3, m: 20, l: 25 } } },
+                'XL': { range: [5001, 7500], scores: { 5: { h: 0, m: 2, l: 8 }, 4: { h: 1, m: 6, l: 15 }, 3: { h: 3, m: 20, l: 25 }, 2: { h: 4, m: 27, l: 33 } } },
+                '2XL': { range: [7501, 10000], scores: { 5: { h: 2, m: 4, l: 12 }, 4: { h: 3, m: 9, l: 25 }, 3: { h: 6, m: 25, l: 36 }, 2: { h: 10, m: 36, l: 45 } } },
+                '3XL': { range: [10001, 14999], scores: { 5: { h: 3, m: 6, l: 16 }, 4: { h: 5, m: 12, l: 30 }, 3: { h: 9, m: 30, l: 41 }, 2: { h: 13, m: 40, l: 49 } } },
+                '4XL': { range: [15000, 9999999], scores: { 5: { h: 5, m: 8, l: 20 }, 4: { h: 8, m: 15, l: 35 }, 3: { h: 9, m: 16, l: 36 }, 2: { h: 12, m: 36, l: 46 } } }
             };
 
-            const calculateDeliveryBtn = document.getElementById('calculate-delivery-btn');
-            const orderDateInput = document.getElementById('order-date');
-            const deliveryDateResult = document.getElementById('delivery-date-result');
+            // --- DATA: DURATION SCORING (Image 1) ---
+            const durationScoring = {
+                'S': { 5: 31, 4: 28, 3: 26, 2: 23, 1: 20 },
+                'M': { 5: 61, 4: 56, 3: 52, 2: 48, 1: 44 },
+                'L': { 5: 76, 4: 70, 3: 65, 2: 60, 1: 55 },
+                'XL': { 5: 92, 4: 84, 3: 77, 2: 70, 1: 63 }
+            };
 
-            calculateDeliveryBtn.addEventListener('click', () => {
-                const leadTimeWeeks = parseInt(materialSelect.value, 10);
-                const orderDateStr = orderDateInput.value;
+            // --- DATA: TPP MATRIX ---
+            const tppMatrix = {
+                'CE': [345, 138, 36],
+                'JC': [500, 230, 115, 34],
+                'ME': [500, 230, 138, 115, 69],
+                'MP': [765, 500, 345, 138, 69, 46, 34, 25, 23],
+                'OE': [345, 138, 69, 34, 23],
+                'PE': [500, 230, 138, 115, 69, 34],
+                'PN': [500, 345, 230, 138, 115, 46],
+                'PP': [500, 345, 138, 69],
+                'TE': [345, 138, 69, 34],
+                'WP': [500, 345, 230, 138, 115, 69, 46, 34, 25]
+            };
 
-                if (!orderDateStr) {
-                    deliveryDateResult.textContent = 'Please select an order date.';
-                    deliveryDateResult.classList.add('text-red-500');
-                    return;
+            function getHardCodedSize(hours) {
+                for (const guideline of hardcodedGuidelines) {
+                    if (hours >= guideline.min && hours <= guideline.max) {
+                        return guideline.size;
+                    }
                 }
+                return null;
+            }
+
+            function formatDate(date) {
+                if (!date || isNaN(date)) return 'Invalid Date';
+                return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+            }
+
+            function addCalendarDays(startDate, days) {
+                const date = new Date(startDate.getTime());
+                date.setDate(date.getDate() + days);
+                return date;
+            }
+
+            function subtractCalendarDays(startDate, days) {
+                const date = new Date(startDate.getTime());
+                date.setDate(date.getDate() - days);
+                return date;
+            }
+
+            // --- TPP CHECKER ---
+            function checkTPP() {
+                const opco = opcoSelect.value;
+                const voltage = parseInt(voltageSelect.value, 10);
                 
-                deliveryDateResult.classList.remove('text-red-500');
-                const orderDate = new Date(orderDateStr + 'T00:00:00Z');
-                const leadTimeDays = leadTimeWeeks * 7;
-                
-                const deliveryDate = new Date(orderDate.getTime());
-                deliveryDate.setDate(deliveryDate.getDate() + leadTimeDays);
-                deliveryDateResult.textContent = formatDate(deliveryDate);
-            });
-
-            const calculateOrderByBtn = document.getElementById('calculate-order-by-btn');
-            const deliveryDateInput = document.getElementById('delivery-date');
-            const orderByDateResult = document.getElementById('order-by-date-result');
-
-            calculateOrderByBtn.addEventListener('click', () => {
-                const leadTimeWeeks = parseInt(materialSelect.value, 10);
-                const deliveryDateStr = deliveryDateInput.value;
-
-                if (!deliveryDateStr) {
-                    orderByDateResult.textContent = 'Please select a delivery date.';
-                    orderByDateResult.classList.add('text-red-500');
-                    return;
-                }
-                
-                orderByDateResult.classList.remove('text-red-500');
-                const deliveryDate = new Date(deliveryDateStr + 'T00:00:00Z');
-                const leadTimeDays = leadTimeWeeks * 7;
-                
-                const orderByDate = new Date(deliveryDate.getTime());
-                orderByDate.setDate(orderByDate.getDate() - leadTimeDays);
-                orderByDateResult.textContent = formatDate(orderByDate);
-            });
-
-            // --- Custom Lead Time Calculator ---
-            const customWeeksDeliveryInput = document.getElementById('custom-weeks-delivery');
-            const customOrderDateInput = document.getElementById('custom-order-date');
-            const customCalculateDeliveryBtn = document.getElementById('custom-calculate-delivery-btn');
-            const customDeliveryDateResult = document.getElementById('custom-delivery-date-result');
-
-            customCalculateDeliveryBtn.addEventListener('click', () => {
-                const leadTimeWeeks = parseInt(customWeeksDeliveryInput.value, 10);
-                const orderDateStr = customOrderDateInput.value;
-
-                if (isNaN(leadTimeWeeks) || leadTimeWeeks <= 0) {
-                    customDeliveryDateResult.textContent = 'Please enter a valid lead time.';
-                    customDeliveryDateResult.classList.add('text-red-500');
-                    return;
-                }
-
-                if (!orderDateStr) {
-                    customDeliveryDateResult.textContent = 'Please select an order date.';
-                    customDeliveryDateResult.classList.add('text-red-500');
+                if (!opco || isNaN(voltage)) {
+                    isTPPActive = false;
+                    tppBadge.className = 'badge badge-gray';
+                    tppBadge.textContent = 'Select OpCo & kV to check TPP';
                     return;
                 }
 
-                customDeliveryDateResult.classList.remove('text-red-500');
-                const orderDate = new Date(orderDateStr + 'T00:00:00Z');
-                const leadTimeDays = leadTimeWeeks * 7;
-                
-                const deliveryDate = new Date(orderDate.getTime());
-                deliveryDate.setDate(deliveryDate.getDate() + leadTimeDays);
-                customDeliveryDateResult.textContent = formatDate(deliveryDate);
-            });
+                if (tppMatrix[opco] && tppMatrix[opco].includes(voltage)) {
+                    isTPPActive = true;
+                    tppBadge.className = 'badge badge-green';
+                    tppBadge.textContent = 'TPP Active';
+                } else {
+                    isTPPActive = false;
+                    tppBadge.className = 'badge badge-gray';
+                    tppBadge.textContent = 'Standard Project';
+                }
+            }
 
-            const customWeeksOrderByInput = document.getElementById('custom-weeks-order-by');
-            const customDeliveryDateInput = document.getElementById('custom-delivery-date');
-            const customCalculateOrderByBtn = document.getElementById('custom-calculate-order-by-btn');
-            const customOrderByDateResult = document.getElementById('custom-order-by-date-result');
+            // --- MAIN CALCULATION ---
+            function calculate() {
+                const hours = parseInt(engineeringHoursInput.value, 10);
+                discussionNote.style.display = 'none';
+                activeReviewDaysForDates = null;
+
+                if (isNaN(hours) || hours < 0) {
+                    projectSizeResult.textContent = '-'; 
+                    physicalReviewResult.textContent = '-'; 
+                    rcReviewResult.textContent = '-';
+                    currentCalculatedSize = null;
+                    return;
+                }
+
+                currentCalculatedSize = getHardCodedSize(hours);
+                const guideline = hardcodedGuidelines.find(g => hours >= g.min && hours <= g.max);
+
+                if (guideline) {
+                    // Use the exact RC days to calculate needed by/submit dates
+                    activeReviewDaysForDates = guideline.rcNum; 
+                    
+                    projectSizeResult.textContent = guideline.size; 
+                    physicalReviewResult.textContent = guideline.physical;
+                    rcReviewResult.textContent = guideline.rc;
+                    
+                    if (hours >= 7501) {
+                         discussionNote.textContent = 'Projects > 7,500 Hours (2XL+) require discussion for QAQC Duration.';
+                         discussionNote.style.display = 'block';
+                    }
+                } else {
+                    projectSizeResult.textContent = 'N/A';
+                    physicalReviewResult.textContent = 'N/A';
+                    rcReviewResult.textContent = 'N/A';
+                }
+            }
+
+            // --- SCORING LOGIC ---
+            function calculateScore() {
+                const hours = parseInt(engineeringHoursInput.value, 10);
+                const durationGiven = parseInt(durationGivenInput.value, 10);
+                const hErrors = parseInt(errorsH.value, 10) || 0;
+                const mErrors = parseInt(errorsM.value, 10) || 0;
+                const lErrors = parseInt(errorsL.value, 10) || 0;
+                
+                checkTPP();
+
+                if (isNaN(hours)) {
+                    finalQualityScoreResult.textContent = "-";
+                    finalDurationScoreResult.textContent = "-";
+                    scoreReason.textContent = "Please enter Project Design Hours first.";
+                    return;
+                }
+
+                const size = getHardCodedSize(hours);
+                if (!size) {
+                    finalQualityScoreResult.textContent = "N/A";
+                    finalDurationScoreResult.textContent = "N/A";
+                    scoreReason.textContent = "Hours out of range.";
+                    return;
+                }
+
+                // 1. Quality Grade (Errors)
+                const criteria = scoringCriteria[size].scores;
+                let hScore = 1, mScore = 1, lScore = 1;
+
+                for (let s = 5; s >= 2; s--) { if (hErrors <= criteria[s].h) { hScore = s; break; } }
+                for (let s = 5; s >= 2; s--) { if (mErrors <= criteria[s].m) { mScore = s; break; } }
+                for (let s = 5; s >= 2; s--) { if (lErrors <= criteria[s].l) { lScore = s; break; } }
+
+                let finalQualityScore = Math.min(hScore, mScore, lScore);
+                finalQualityScoreResult.className = `text-4xl font-bold score-${finalQualityScore}`;
+                finalQualityScoreResult.textContent = finalQualityScore;
+
+                // 2. Duration Grade
+                let dScoreOutput = "-";
+                let durationReasonText = "(Enter duration to see Duration Grade)";
+
+                if (!isNaN(durationGiven)) {
+                    let dScore = 1;
+
+                    if (['2XL', '3XL', '4XL'].includes(size)) {
+                        // For 2XL+, matrix merges everything into an "84+" requirement without granular 4, 3, 2 steps
+                        if (durationGiven >= 84) {
+                            dScore = 5;
+                        } else {
+                            dScore = 1;
+                        }
+                        
+                        dScoreOutput = dScore;
+                        finalDurationScoreResult.className = `text-4xl font-bold score-${dScore}`;
+                        durationReasonText = `(Duration: ${durationGiven} days - needs 84+ for Score 5)`;
+                    } else {
+                        // Standard matrix grading for S, M, L, XL
+                        const dMatrix = durationScoring[size];
+                        if (durationGiven >= dMatrix[5]) dScore = 5;
+                        else if (durationGiven >= dMatrix[4]) dScore = 4;
+                        else if (durationGiven >= dMatrix[3]) dScore = 3;
+                        else if (durationGiven >= dMatrix[2]) dScore = 2;
+                        
+                        dScoreOutput = dScore;
+                        finalDurationScoreResult.className = `text-4xl font-bold score-${dScore}`;
+                        durationReasonText = `(Duration: ${durationGiven} days = Score ${dScore})`;
+                    }
+                } else {
+                    finalDurationScoreResult.className = `text-4xl font-bold text-gray-400`;
+                }
+                finalDurationScoreResult.textContent = dScoreOutput;
+                
+                scoreReason.innerHTML = `
+                    Based on Size <strong>${size}</strong> ${isTPPActive ? '(TPP Active)' : '(Standard)'}:<br>
+                    Errors => High:${hScore} | Med:${mScore} | Low:${lScore} <br>
+                    ${durationReasonText}
+                `;
+            }
+
+            function setupCollapsibles() {
+                document.querySelectorAll('.collapsible-toggle').forEach(toggle => {
+                    toggle.addEventListener('click', () => {
+                        const card = toggle.closest('.collapsible-card');
+                        card.classList.toggle('is-collapsed');
+                    });
+                });
+            }
+
+            calculateBtn.addEventListener('click', calculate);
+            calculateScoreBtn.addEventListener('click', calculateScore);
+            engineeringHoursInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') calculate(); });
             
-            customCalculateOrderByBtn.addEventListener('click', () => {
-                const leadTimeWeeks = parseInt(customWeeksOrderByInput.value, 10);
-                const deliveryDateStr = customDeliveryDateInput.value;
+            opcoSelect.addEventListener('change', checkTPP);
+            voltageSelect.addEventListener('change', checkTPP);
 
-                if (isNaN(leadTimeWeeks) || leadTimeWeeks <= 0) {
-                    customOrderByDateResult.textContent = 'Please enter a valid lead time.';
-                    customOrderByDateResult.classList.add('text-red-500');
+            calculateNeededByBtn.addEventListener('click', () => {
+                neededByDateResult.classList.remove('text-red-500');
+                if (activeReviewDaysForDates === null) {
+                    neededByDateResult.textContent = 'Calc review time first.';
+                    neededByDateResult.classList.add('text-red-500');
                     return;
                 }
-
-                if (!deliveryDateStr) {
-                    customOrderByDateResult.textContent = 'Please select a delivery date.';
-                    customOrderByDateResult.classList.add('text-red-500');
+                const submitDateStr = submitDateInput.value;
+                if (!submitDateStr) {
+                    neededByDateResult.textContent = 'Select submit date.';
                     return;
                 }
-
-                customOrderByDateResult.classList.remove('text-red-500');
-                const deliveryDate = new Date(deliveryDateStr + 'T00:00:00Z');
-                const leadTimeDays = leadTimeWeeks * 7;
-
-                const orderByDate = new Date(deliveryDate.getTime());
-                orderByDate.setDate(orderByDate.getDate() - leadTimeDays);
-                customOrderByDateResult.textContent = formatDate(orderByDate);
+                const submitDate = new Date(submitDateStr + 'T00:00:00Z');
+                const neededByDate = addCalendarDays(submitDate, activeReviewDaysForDates);
+                neededByDateResult.textContent = formatDate(neededByDate);
             });
+            
+            calculateSubmitByBtn.addEventListener('click', () => {
+                submitByDateResult.classList.remove('text-red-500');
+                if (activeReviewDaysForDates === null) {
+                    submitByDateResult.textContent = 'Calc review time first.';
+                    submitByDateResult.classList.add('text-red-500');
+                    return;
+                }
+                const neededBackDateStr = neededBackDateInput.value;
+                 if (!neededBackDateStr) {
+                    submitByDateResult.textContent = 'Select needed date.';
+                    return;
+                }
+                const neededBackDate = new Date(neededBackDateStr + 'T00:00:00Z');
+                const submitByDate = subtractCalendarDays(neededBackDate, activeReviewDaysForDates);
+                submitByDateResult.textContent = formatDate(submitByDate);
+            });
+            
+            setupCollapsibles();
         });
     </script>
 </body>
