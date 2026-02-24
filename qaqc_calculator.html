@@ -211,10 +211,16 @@
                     </div>
 
                     <!-- Duration Given input -->
-                    <div class="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
-                        <label class="block text-sm font-bold text-blue-900 mb-1">QAQC Duration Given (Days)</label>
-                        <p class="text-xs text-blue-700 mb-2">Requested need date minus Received date</p>
-                        <input type="number" id="duration-given" placeholder="e.g., 40" min="0" class="w-full md:w-1/2 p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                    <div class="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg flex flex-col md:flex-row gap-6 items-center">
+                        <div class="w-full md:w-1/2">
+                            <label class="block text-sm font-bold text-blue-900 mb-1">QAQC Duration Given (Days)</label>
+                            <p class="text-xs text-blue-700 mb-2">Requested need date minus Received date</p>
+                            <input type="number" id="duration-given" placeholder="e.g., 40" min="0" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                        </div>
+                        <div class="w-full md:w-1/2 text-sm text-blue-800 md:border-l-2 md:border-blue-200 md:pl-6">
+                            <h4 class="font-bold mb-1">How it's scored:</h4>
+                            <p>Enter the actual number of calendar days given to the QAQC team for their review. The calculator uses the <em>QAQC Duration Matrix</em> to assign a <strong>Duration Grade (1-5)</strong> based on your project's size.</p>
+                        </div>
                     </div>
 
                     <!-- Errors input -->
@@ -744,13 +750,22 @@
                 let durationReasonText = "(Enter duration to see Duration Grade)";
 
                 if (!isNaN(durationGiven)) {
+                    let dScore = 1;
+
                     if (['2XL', '3XL', '4XL'].includes(size)) {
-                        dScoreOutput = durationGiven >= 84 ? "Pass" : "Fail";
-                        finalDurationScoreResult.className = `text-4xl font-bold ${durationGiven >= 84 ? 'text-green-600' : 'text-red-600'}`;
-                        durationReasonText = `(Duration: ${durationGiven} days - needs 84+)`;
+                        // For 2XL+, matrix merges everything into an "84+" requirement without granular 4, 3, 2 steps
+                        if (durationGiven >= 84) {
+                            dScore = 5;
+                        } else {
+                            dScore = 1;
+                        }
+                        
+                        dScoreOutput = dScore;
+                        finalDurationScoreResult.className = `text-4xl font-bold score-${dScore}`;
+                        durationReasonText = `(Duration: ${durationGiven} days - needs 84+ for Score 5)`;
                     } else {
+                        // Standard matrix grading for S, M, L, XL
                         const dMatrix = durationScoring[size];
-                        let dScore = 1;
                         if (durationGiven >= dMatrix[5]) dScore = 5;
                         else if (durationGiven >= dMatrix[4]) dScore = 4;
                         else if (durationGiven >= dMatrix[3]) dScore = 3;
