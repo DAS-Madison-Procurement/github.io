@@ -25,6 +25,9 @@
             border-radius: 0.5rem;
             padding: 1.5rem;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .result-box-label {
             font-size: 0.875rem;
@@ -33,7 +36,7 @@
             display: block;
         }
         .result-box-value {
-            font-size: 1.875rem;
+            font-size: 1.75rem;
             font-weight: 700;
             color: #111827;
             min-height: 2.75rem;
@@ -56,7 +59,7 @@
             padding: 2rem;
         }
         .collapsible-content {
-            max-height: 3000px; /* Increased to ensure content fits */
+            max-height: 3000px;
             overflow: hidden;
             transition: max-height 0.4s ease-in-out;
         }
@@ -112,15 +115,15 @@
             <div class="grid md:grid-cols-3 gap-6">
                 <div>
                     <span class="font-bold block mb-1 text-blue-800">1. To Estimate Time:</span>
-                    Enter the Total Project Design Hours in the box below and click <strong>"Calculate Review Time"</strong>. This determines the Project Size (S, M, L, etc.) and expected duration.
+                    Enter the Total Project Design Hours in the box below and click <strong>"Calculate Review Time"</strong>. This sets the timelines in the top boxes.
                 </div>
                 <div>
                     <span class="font-bold block mb-1 text-blue-800">2. To Calculate Grade:</span>
-                    After entering hours, expand the <strong>"Calculate Project Score"</strong> section. Enter your duration given and error counts to calculate your grades.
+                    Expand the <strong>"Calculate Project Score"</strong> section. Enter your duration given and error counts to calculate your exact grades.
                 </div>
                 <div>
                     <span class="font-bold block mb-1 text-blue-800">3. To Find Deadlines:</span>
-                    First complete Step 1 to set the duration. Then expand the <strong>"Date Calculators"</strong> section to determine when to submit or when you'll get it back.
+                    First complete Step 1 to set the duration. Then expand the <strong>"Date Calculators"</strong> section to determine when to submit or when you'll get it back based on the Expected R&C.
                 </div>
             </div>
         </div>
@@ -139,15 +142,15 @@
                 <div class="grid md:grid-cols-3 gap-6 pt-4 border-t">
                      <div class="result-box">
                          <span class="result-box-label">Project Size</span>
-                         <p id="project-size-result" class="result-box-value"></p>
+                         <p id="project-size-result" class="result-box-value text-brand">-</p>
                      </div>
-                     <div class="result-box">
+                     <div class="result-box bg-gray-50">
                          <span class="result-box-label">Est. Physical Review</span>
-                         <p id="review-time-result" class="result-box-value"></p>
+                         <p id="physical-review-result" class="result-box-value">-</p>
                      </div>
-                     <div class="result-box">
-                         <span class="result-box-label">Expected Days</span>
-                         <p id="qaqc-days-result" class="result-box-value"></p>
+                     <div class="result-box bg-blue-50 border-blue-200">
+                         <span class="result-box-label">Expected R&C Review</span>
+                         <p id="rc-review-result" class="result-box-value text-blue-900">-</p>
                      </div>
                 </div>
                  <div id="discussion-note" class="text-center text-amber-600 font-semibold pt-4" style="display: none;"></div>
@@ -207,12 +210,14 @@
                         </div>
                     </div>
 
+                    <!-- Duration Given input -->
                     <div class="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
                         <label class="block text-sm font-bold text-blue-900 mb-1">QAQC Duration Given (Days)</label>
                         <p class="text-xs text-blue-700 mb-2">Requested need date minus Received date</p>
                         <input type="number" id="duration-given" placeholder="e.g., 40" min="0" class="w-full md:w-1/2 p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
                     </div>
 
+                    <!-- Errors input -->
                     <div class="grid md:grid-cols-3 gap-6 mb-6">
                         <div>
                             <label class="block text-sm font-bold text-red-600 mb-1">High Errors</label>
@@ -535,8 +540,8 @@
             const engineeringHoursInput = document.getElementById('engineering-hours');
             const calculateBtn = document.getElementById('calculate-btn');
             const projectSizeResult = document.getElementById('project-size-result');
-            const reviewTimeResult = document.getElementById('review-time-result');
-            const qaqcDaysResult = document.getElementById('qaqc-days-result');
+            const physicalReviewResult = document.getElementById('physical-review-result');
+            const rcReviewResult = document.getElementById('rc-review-result');
             const discussionNote = document.getElementById('discussion-note');
             
             // Scoring Elements
@@ -562,19 +567,20 @@
             const calculateSubmitByBtn = document.getElementById('calculate-submit-by-btn');
             const submitByDateResult = document.getElementById('submit-by-date-result');
 
-            let activeReviewDays = null;
+            let activeReviewDaysForDates = null;
             let currentCalculatedSize = null;
             let isTPPActive = false;
 
-            // --- DATA: SIZING MATRIX (Image 2) ---
+            // --- DATA: COMBINED SIZING MATRIX ---
+            // 'rc' maps to the "Score 5" days for that specific size
             const hardcodedGuidelines = [
-                { size: 'S', min: 0, max: 500, text: '4 Weeks', days: 28 },
-                { size: 'M', min: 501, max: 2500, text: '5 Weeks', days: 35 },
-                { size: 'L', min: 2501, max: 5000, text: '6 Weeks', days: 42 },
-                { size: 'XL', min: 5001, max: 7500, text: '7 Weeks', days: 49 },
-                { size: '2XL', min: 7501, max: 10000, text: '8+ Weeks', days: 56 },
-                { size: '3XL', min: 10001, max: 14999, text: '9+ Weeks', days: 63 },
-                { size: '4XL', min: 15000, max: 9999999, text: '9+ Weeks', days: 63 }
+                { size: 'S', min: 0, max: 500, physical: '4 Weeks', rc: '31 Days', rcNum: 31 },
+                { size: 'M', min: 501, max: 2500, physical: '5 Weeks', rc: '61 Days', rcNum: 61 },
+                { size: 'L', min: 2501, max: 5000, physical: '6 Weeks', rc: '76 Days', rcNum: 76 },
+                { size: 'XL', min: 5001, max: 7500, physical: '7 Weeks', rc: '92 Days', rcNum: 92 },
+                { size: '2XL', min: 7501, max: 10000, physical: '8+ Weeks', rc: '84+ Days', rcNum: 84 },
+                { size: '3XL', min: 10001, max: 14999, physical: '9+ Weeks', rc: '84+ Days', rcNum: 84 },
+                { size: '4XL', min: 15000, max: 9999999, physical: '9+ Weeks', rc: '84+ Days', rcNum: 84 }
             ];
 
             // --- DATA: SCORING MATRIX ---
@@ -663,12 +669,12 @@
             function calculate() {
                 const hours = parseInt(engineeringHoursInput.value, 10);
                 discussionNote.style.display = 'none';
-                activeReviewDays = null;
+                activeReviewDaysForDates = null;
 
                 if (isNaN(hours) || hours < 0) {
-                    projectSizeResult.textContent = ''; 
-                    reviewTimeResult.textContent = ''; 
-                    qaqcDaysResult.textContent = '';
+                    projectSizeResult.textContent = '-'; 
+                    physicalReviewResult.textContent = '-'; 
+                    rcReviewResult.textContent = '-';
                     currentCalculatedSize = null;
                     return;
                 }
@@ -677,18 +683,21 @@
                 const guideline = hardcodedGuidelines.find(g => hours >= g.min && hours <= g.max);
 
                 if (guideline) {
-                    activeReviewDays = guideline.days;
-                    projectSizeResult.textContent = guideline.size; 
-                    reviewTimeResult.innerHTML = `<span class="block text-2xl">${guideline.text}</span>`;
-                    qaqcDaysResult.textContent = `${guideline.days} Days`;
+                    // Use the exact RC days to calculate needed by/submit dates
+                    activeReviewDaysForDates = guideline.rcNum; 
                     
-                    if (hours > 10001 || guideline.days >= 63) {
-                         discussionNote.textContent = 'Projects > 10,001 Hours (3XL+) require discussion.';
+                    projectSizeResult.textContent = guideline.size; 
+                    physicalReviewResult.textContent = guideline.physical;
+                    rcReviewResult.textContent = guideline.rc;
+                    
+                    if (hours >= 7501) {
+                         discussionNote.textContent = 'Projects > 7,500 Hours (2XL+) require discussion for QAQC Duration.';
                          discussionNote.style.display = 'block';
                     }
                 } else {
                     projectSizeResult.textContent = 'N/A';
-                    reviewTimeResult.textContent = 'N/A';
+                    physicalReviewResult.textContent = 'N/A';
+                    rcReviewResult.textContent = 'N/A';
                 }
             }
 
@@ -780,7 +789,7 @@
 
             calculateNeededByBtn.addEventListener('click', () => {
                 neededByDateResult.classList.remove('text-red-500');
-                if (activeReviewDays === null) {
+                if (activeReviewDaysForDates === null) {
                     neededByDateResult.textContent = 'Calc review time first.';
                     neededByDateResult.classList.add('text-red-500');
                     return;
@@ -791,13 +800,13 @@
                     return;
                 }
                 const submitDate = new Date(submitDateStr + 'T00:00:00Z');
-                const neededByDate = addCalendarDays(submitDate, activeReviewDays);
+                const neededByDate = addCalendarDays(submitDate, activeReviewDaysForDates);
                 neededByDateResult.textContent = formatDate(neededByDate);
             });
             
             calculateSubmitByBtn.addEventListener('click', () => {
                 submitByDateResult.classList.remove('text-red-500');
-                if (activeReviewDays === null) {
+                if (activeReviewDaysForDates === null) {
                     submitByDateResult.textContent = 'Calc review time first.';
                     submitByDateResult.classList.add('text-red-500');
                     return;
@@ -808,7 +817,7 @@
                     return;
                 }
                 const neededBackDate = new Date(neededBackDateStr + 'T00:00:00Z');
-                const submitByDate = subtractCalendarDays(neededBackDate, activeReviewDays);
+                const submitByDate = subtractCalendarDays(neededBackDate, activeReviewDaysForDates);
                 submitByDateResult.textContent = formatDate(submitByDate);
             });
             
