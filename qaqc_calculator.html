@@ -99,7 +99,6 @@
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">FirstEnergy QAQC Calculator</h1>
                 <p class="text-gray-600 mt-1">Estimate review times, calculate grades, and check TPP criteria.</p>
-                 <p id="last-updated" class="text-sm text-gray-500 mt-2">Loading guideline data...</p>
             </div>
         </div>
 
@@ -117,7 +116,7 @@
                 </div>
                 <div>
                     <span class="font-bold block mb-1 text-blue-800">2. To Calculate Grade:</span>
-                    After entering hours, expand the <strong>"Calculate Project Score"</strong> section. Select the OpCo/Voltage to check TPP, enter your error counts, and click Calculate.
+                    After entering hours, expand the <strong>"Calculate Project Score"</strong> section. Enter your duration given and error counts to calculate your grades.
                 </div>
                 <div>
                     <span class="font-bold block mb-1 text-blue-800">3. To Find Deadlines:</span>
@@ -143,7 +142,7 @@
                          <p id="project-size-result" class="result-box-value"></p>
                      </div>
                      <div class="result-box">
-                         <span class="result-box-label">Est. Review Time</span>
+                         <span class="result-box-label">Est. Physical Review</span>
                          <p id="review-time-result" class="result-box-value"></p>
                      </div>
                      <div class="result-box">
@@ -208,6 +207,12 @@
                         </div>
                     </div>
 
+                    <div class="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                        <label class="block text-sm font-bold text-blue-900 mb-1">QAQC Duration Given (Days)</label>
+                        <p class="text-xs text-blue-700 mb-2">Requested need date minus Received date</p>
+                        <input type="number" id="duration-given" placeholder="e.g., 40" min="0" class="w-full md:w-1/2 p-3 border border-gray-300 rounded-lg focus:ring-2 focus-brand">
+                    </div>
+
                     <div class="grid md:grid-cols-3 gap-6 mb-6">
                         <div>
                             <label class="block text-sm font-bold text-red-600 mb-1">High Errors</label>
@@ -224,14 +229,21 @@
                     </div>
 
                     <button id="calculate-score-btn" class="w-full bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-900 transition mb-6">
-                        Calculate Final Grade
+                        Calculate Final Grades
                     </button>
 
-                    <div class="result-box bg-gray-50">
-                        <span class="result-box-label">Calculated QAQC Grade</span>
-                        <p id="final-score-result" class="text-4xl font-bold text-gray-400">-</p>
-                        <p id="score-reason" class="text-sm text-gray-500 mt-2">Enter hours above and errors to calculate.</p>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="result-box bg-gray-50">
+                            <span class="result-box-label">Quality Grade (Errors)</span>
+                            <p id="final-quality-score" class="text-4xl font-bold text-gray-400">-</p>
+                        </div>
+                        <div class="result-box bg-gray-50">
+                            <span class="result-box-label">Duration Grade</span>
+                            <p id="final-duration-score" class="text-4xl font-bold text-gray-400">-</p>
+                        </div>
                     </div>
+                    <p id="score-reason" class="text-sm text-center text-gray-500 mt-4">Enter hours, duration, and errors to calculate.</p>
+
                 </div>
             </div>
         </div>
@@ -295,30 +307,59 @@
                  <div class="px-8 pb-8 pt-6 border-t border-gray-200">
                     
                     <div class="flex space-x-6 border-b border-gray-200 mb-6 overflow-x-auto">
-                        <button class="tab-btn active pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-processing')">Processing Time</button>
-                        <button class="tab-btn pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-scoring')">Scoring Criteria</button>
+                        <button class="tab-btn active pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-processing')">Physical Review Time</button>
+                        <button class="tab-btn pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-duration-scoring')">QAQC Duration Scoring</button>
+                        <button class="tab-btn pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-error-scoring')">Error Scoring Criteria</button>
                         <button class="tab-btn pb-3 px-1 text-sm font-medium focus:outline-none whitespace-nowrap" onclick="switchTab('tab-tpp')">TPP Matrix & Guidelines</button>
                     </div>
 
                     <div id="tab-processing" class="tab-content block">
-                        <p class="text-sm text-gray-500 mb-4">Standard expected duration to receive a score of 5.</p>
+                        <p class="text-sm text-gray-500 mb-4">Estimated Physical Review Duration based on Project Size.</p>
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
+                            <table class="w-full text-left border-collapse text-sm">
                                 <thead>
                                     <tr>
-                                        <th class="text-sm font-semibold text-gray-700">Project Size</th>
-                                        <th class="text-sm font-semibold text-gray-700">Engineering Hours</th>
-                                        <th class="text-sm font-semibold text-gray-700">Duration (Calendar Days)</th>
+                                        <th class="font-semibold text-gray-700">Size</th>
+                                        <th class="font-semibold text-gray-700">Total Project Eng. Hrs.</th>
+                                        <th class="font-semibold text-gray-700">Estimated Physical Review Duration</th>
                                     </tr>
                                 </thead>
-                                <tbody id="guidelines-table-body">
-                                    <tr><td colspan="3" class="text-center p-4 text-gray-500">Loading guidelines...</td></tr>
+                                <tbody>
+                                    <tr><td class="font-bold">S</td><td>&lt; 500 hrs.</td><td>4 weeks</td></tr>
+                                    <tr><td class="font-bold">M</td><td>501–2,500 hrs.</td><td>5 weeks</td></tr>
+                                    <tr><td class="font-bold">L</td><td>2,501–5,000 hrs.</td><td>6 weeks</td></tr>
+                                    <tr><td class="font-bold">XL</td><td>5,001–7,500 hrs.</td><td>7 weeks</td></tr>
+                                    <tr><td class="font-bold">XXL (2XL)</td><td>7,501–10,000 hrs.</td><td>8+ weeks</td></tr>
+                                    <tr><td class="font-bold">XXXL (3XL+)</td><td>&gt;10,001 hrs.</td><td>9+ weeks (discussion required)</td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
-                    <div id="tab-scoring" class="tab-content hidden">
+                    <div id="tab-duration-scoring" class="tab-content hidden">
+                        <p class="text-sm text-gray-500 mb-4">Days given for QAQC review (Requested need date – Received date).</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-center border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-gray-200">
+                                        <th class="p-2 border font-bold">Score</th><th class="p-2 border">S</th><th class="p-2 border">M</th>
+                                        <th class="p-2 border">L</th><th class="p-2 border">XL</th><th class="p-2 border">2XL</th>
+                                        <th class="p-2 border">3XL</th><th class="p-2 border">4XL</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td class="font-bold border bg-gray-100 score-5">5</td><td class="border">31</td><td class="border text-red-600">61</td><td class="border text-red-600">76</td><td class="border text-red-600">92</td><td rowspan="5" colspan="3" class="border bg-gray-50 text-red-600 font-bold">84+ days<br>(Discussion w/ QAQC needed)</td></tr>
+                                    <tr><td class="font-bold border bg-gray-100 score-4">4</td><td class="border">28</td><td class="border text-red-600">56</td><td class="border text-red-600">70</td><td class="border text-red-600">84</td></tr>
+                                    <tr><td class="font-bold border bg-gray-100 score-3">3</td><td class="border">26</td><td class="border text-red-600">52</td><td class="border text-red-600">65</td><td class="border text-red-600">77</td></tr>
+                                    <tr><td class="font-bold border bg-gray-100 score-2">2</td><td class="border">23</td><td class="border text-red-600">48</td><td class="border text-red-600">60</td><td class="border text-red-600">70</td></tr>
+                                    <tr><td class="font-bold border bg-gray-100 score-1">1</td><td class="border">20</td><td class="border text-red-600">44</td><td class="border text-red-600">55</td><td class="border text-red-600">63</td></tr>
+                                </tbody>
+                            </table>
+                            <p class="text-xs text-gray-500 mt-2 italic">(Full points awarded with a score of a 4. Bonus points for any score above 4.)</p>
+                        </div>
+                    </div>
+
+                    <div id="tab-error-scoring" class="tab-content hidden">
                         <p class="text-sm text-gray-500 mb-4">Maximum allowed errors per score category.</p>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse text-sm">
@@ -329,42 +370,42 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">S (0-499 hrs)</td></tr>
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">S (0-500 hrs)</td></tr>
                                     <tr><td class="score-5 font-bold">5</td><td>H:0, M:0, L:0</td></tr>
                                     <tr><td class="score-4 font-bold">4</td><td>H:0, M:1, L:3</td></tr>
                                     <tr><td class="score-3 font-bold">3</td><td>H:0, M:5, L:10</td></tr>
                                     <tr><td class="score-2 font-bold">2</td><td>H:1, M:10, L:15</td></tr>
                                     <tr><td class="score-1 font-bold">1</td><td>H:2+, M:11+, L:16+</td></tr>
                                     
-                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">M (500-1499 hrs)</td></tr>
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">M (501-2,500 hrs)</td></tr>
                                     <tr><td class="score-5 font-bold">5</td><td>H:0, M:0, L:0</td></tr>
                                     <tr><td class="score-4 font-bold">4</td><td>H:0, M:2, L:5</td></tr>
                                     <tr><td class="score-3 font-bold">3</td><td>H:1, M:10, L:15</td></tr>
                                     <tr><td class="score-2 font-bold">2</td><td>H:2, M:15, L:20</td></tr>
                                     <tr><td class="score-1 font-bold">1</td><td>H:3+, M:16+, L:21+</td></tr>
 
-                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">L (1500-3999 hrs)</td></tr>
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">L (2,501-5,000 hrs)</td></tr>
                                     <tr><td class="score-5 font-bold">5</td><td>H:0, M:1, L:5</td></tr>
                                     <tr><td class="score-4 font-bold">4</td><td>H:1, M:3, L:10</td></tr>
                                     <tr><td class="score-3 font-bold">3</td><td>H:2, M:15, L:20</td></tr>
                                     <tr><td class="score-2 font-bold">2</td><td>H:3, M:20, L:25</td></tr>
                                     <tr><td class="score-1 font-bold">1</td><td>H:4+, M:21+, L:26+</td></tr>
 
-                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">XL (4000-7499 hrs)</td></tr>
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">XL (5,001-7,500 hrs)</td></tr>
                                     <tr><td class="score-5 font-bold">5</td><td>H:0, M:2, L:8</td></tr>
                                     <tr><td class="score-4 font-bold">4</td><td>H:1, M:6, L:15</td></tr>
                                     <tr><td class="score-3 font-bold">3</td><td>H:3, M:20, L:25</td></tr>
                                     <tr><td class="score-2 font-bold">2</td><td>H:4, M:27, L:33</td></tr>
                                     <tr><td class="score-1 font-bold">1</td><td>H:5+, M:28+, L:34+</td></tr>
 
-                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">2XL (7500-9999 hrs)</td></tr>
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">2XL (7,501-10,000 hrs)</td></tr>
                                     <tr><td class="score-5 font-bold">5</td><td>H:0-2, M:0-4, L:0-12</td></tr>
                                     <tr><td class="score-4 font-bold">4</td><td>H:3, M:5-9, L:13-25</td></tr>
                                     <tr><td class="score-3 font-bold">3</td><td>H:4-6, M:10-25, L:26-36</td></tr>
                                     <tr><td class="score-2 font-bold">2</td><td>H:7-10, M:26-36, L:37-45</td></tr>
                                     <tr><td class="score-1 font-bold">1</td><td>H:11+, M:37+, L:46+</td></tr>
 
-                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">3XL (10,000-14,999 hrs)</td></tr>
+                                    <tr class="bg-gray-100"><td colspan="2" class="font-bold text-gray-800">3XL (10,001-14,999 hrs)</td></tr>
                                     <tr><td class="score-5 font-bold">5</td><td>H:0-3, M:0-6, L:0-16</td></tr>
                                     <tr><td class="score-4 font-bold">4</td><td>H:4-5, M:7-12, L:17-30</td></tr>
                                     <tr><td class="score-3 font-bold">3</td><td>H:7-9, M:13-30, L:31-41</td></tr>
@@ -383,7 +424,6 @@
                     </div>
 
                     <div id="tab-tpp" class="tab-content hidden">
-                        
                         <div class="mb-8">
                             <h3 class="font-bold text-gray-800 mb-2">1. Voltage/OpCo Matrix</h3>
                             <div class="overflow-x-auto">
@@ -497,15 +537,16 @@
             const projectSizeResult = document.getElementById('project-size-result');
             const reviewTimeResult = document.getElementById('review-time-result');
             const qaqcDaysResult = document.getElementById('qaqc-days-result');
-            const lastUpdatedElement = document.getElementById('last-updated');
             const discussionNote = document.getElementById('discussion-note');
             
             // Scoring Elements
             const errorsH = document.getElementById('errors-h');
             const errorsM = document.getElementById('errors-m');
             const errorsL = document.getElementById('errors-l');
+            const durationGivenInput = document.getElementById('duration-given');
             const calculateScoreBtn = document.getElementById('calculate-score-btn');
-            const finalScoreResult = document.getElementById('final-score-result');
+            const finalQualityScoreResult = document.getElementById('final-quality-score');
+            const finalDurationScoreResult = document.getElementById('final-duration-score');
             const scoreReason = document.getElementById('score-reason');
             
             // TPP Elements
@@ -521,28 +562,41 @@
             const calculateSubmitByBtn = document.getElementById('calculate-submit-by-btn');
             const submitByDateResult = document.getElementById('submit-by-date-result');
 
-            // Guidelines Table
-            const guidelinesTableBody = document.getElementById('guidelines-table-body');
-            const googleSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdpYw6MNdXxL_H19JD8vJzNbKakS4eh2rud1QyidT4sN92xgjVtced3Y9FgjLMkMPD_dG6t6spqfMy/pub?output=csv';
-
-            let guidelines = [];
             let activeReviewDays = null;
             let currentCalculatedSize = null;
             let isTPPActive = false;
 
+            // --- DATA: SIZING MATRIX (Image 2) ---
+            const hardcodedGuidelines = [
+                { size: 'S', min: 0, max: 500, text: '4 Weeks', days: 28 },
+                { size: 'M', min: 501, max: 2500, text: '5 Weeks', days: 35 },
+                { size: 'L', min: 2501, max: 5000, text: '6 Weeks', days: 42 },
+                { size: 'XL', min: 5001, max: 7500, text: '7 Weeks', days: 49 },
+                { size: '2XL', min: 7501, max: 10000, text: '8+ Weeks', days: 56 },
+                { size: '3XL', min: 10001, max: 14999, text: '9+ Weeks', days: 63 },
+                { size: '4XL', min: 15000, max: 9999999, text: '9+ Weeks', days: 63 }
+            ];
+
             // --- DATA: SCORING MATRIX ---
             const scoringCriteria = {
-                'S': { range: [0, 499], scores: { 5: { h: 0, m: 0, l: 0 }, 4: { h: 0, m: 1, l: 3 }, 3: { h: 0, m: 5, l: 10 }, 2: { h: 1, m: 10, l: 15 } } },
-                'M': { range: [500, 1499], scores: { 5: { h: 0, m: 0, l: 0 }, 4: { h: 0, m: 2, l: 5 }, 3: { h: 1, m: 10, l: 15 }, 2: { h: 2, m: 15, l: 20 } } },
-                'L': { range: [1500, 3999], scores: { 5: { h: 0, m: 1, l: 5 }, 4: { h: 1, m: 3, l: 10 }, 3: { h: 2, m: 15, l: 20 }, 2: { h: 3, m: 20, l: 25 } } },
-                'XL': { range: [4000, 7499], scores: { 5: { h: 0, m: 2, l: 8 }, 4: { h: 1, m: 6, l: 15 }, 3: { h: 3, m: 20, l: 25 }, 2: { h: 4, m: 27, l: 33 } } },
-                '2XL': { range: [7500, 9999], scores: { 5: { h: 2, m: 4, l: 12 }, 4: { h: 3, m: 9, l: 25 }, 3: { h: 6, m: 25, l: 36 }, 2: { h: 10, m: 36, l: 45 } } },
-                '3XL': { range: [10000, 14999], scores: { 5: { h: 3, m: 6, l: 16 }, 4: { h: 5, m: 12, l: 30 }, 3: { h: 9, m: 30, l: 41 }, 2: { h: 13, m: 40, l: 49 } } },
+                'S': { range: [0, 500], scores: { 5: { h: 0, m: 0, l: 0 }, 4: { h: 0, m: 1, l: 3 }, 3: { h: 0, m: 5, l: 10 }, 2: { h: 1, m: 10, l: 15 } } },
+                'M': { range: [501, 2500], scores: { 5: { h: 0, m: 0, l: 0 }, 4: { h: 0, m: 2, l: 5 }, 3: { h: 1, m: 10, l: 15 }, 2: { h: 2, m: 15, l: 20 } } },
+                'L': { range: [2501, 5000], scores: { 5: { h: 0, m: 1, l: 5 }, 4: { h: 1, m: 3, l: 10 }, 3: { h: 2, m: 15, l: 20 }, 2: { h: 3, m: 20, l: 25 } } },
+                'XL': { range: [5001, 7500], scores: { 5: { h: 0, m: 2, l: 8 }, 4: { h: 1, m: 6, l: 15 }, 3: { h: 3, m: 20, l: 25 }, 2: { h: 4, m: 27, l: 33 } } },
+                '2XL': { range: [7501, 10000], scores: { 5: { h: 2, m: 4, l: 12 }, 4: { h: 3, m: 9, l: 25 }, 3: { h: 6, m: 25, l: 36 }, 2: { h: 10, m: 36, l: 45 } } },
+                '3XL': { range: [10001, 14999], scores: { 5: { h: 3, m: 6, l: 16 }, 4: { h: 5, m: 12, l: 30 }, 3: { h: 9, m: 30, l: 41 }, 2: { h: 13, m: 40, l: 49 } } },
                 '4XL': { range: [15000, 9999999], scores: { 5: { h: 5, m: 8, l: 20 }, 4: { h: 8, m: 15, l: 35 }, 3: { h: 9, m: 16, l: 36 }, 2: { h: 12, m: 36, l: 46 } } }
             };
 
+            // --- DATA: DURATION SCORING (Image 1) ---
+            const durationScoring = {
+                'S': { 5: 31, 4: 28, 3: 26, 2: 23, 1: 20 },
+                'M': { 5: 61, 4: 56, 3: 52, 2: 48, 1: 44 },
+                'L': { 5: 76, 4: 70, 3: 65, 2: 60, 1: 55 },
+                'XL': { 5: 92, 4: 84, 3: 77, 2: 70, 1: 63 }
+            };
+
             // --- DATA: TPP MATRIX ---
-            // 'Yes' values from the TPP table
             const tppMatrix = {
                 'CE': [345, 138, 36],
                 'JC': [500, 230, 115, 34],
@@ -557,54 +611,12 @@
             };
 
             function getHardCodedSize(hours) {
-                for (const [size, data] of Object.entries(scoringCriteria)) {
-                    if (hours >= data.range[0] && hours <= data.range[1]) {
-                        return size;
+                for (const guideline of hardcodedGuidelines) {
+                    if (hours >= guideline.min && hours <= guideline.max) {
+                        return guideline.size;
                     }
                 }
                 return null;
-            }
-
-            async function fetchGuidelines() {
-                try {
-                    const response = await fetch(googleSheetUrl);
-                    if (!response.ok) throw new Error('Network response was not ok.');
-                    const csvText = await response.text();
-                    
-                    const rows = csvText.trim().split('\n').slice(1).filter(row => row);
-
-                    guidelines = rows.map(row => {
-                        const columns = row.split(',');
-                        return {
-                            size: columns[0] ? columns[0].trim().replace(/"/g, '') : '',
-                            minHours: parseInt(columns[1].trim(), 10),
-                            maxHours: parseInt(columns[2].trim(), 10),
-                            days: parseInt(columns[3].trim(), 10),
-                        };
-                    });
-                    
-                    // Populate Tab 1
-                    guidelinesTableBody.innerHTML = '';
-                    if (guidelines.length === 0) {
-                        guidelinesTableBody.innerHTML = '<tr><td colspan="3" class="text-center p-4 text-gray-500">No guidelines found.</td></tr>';
-                    } else {
-                        guidelines.forEach(g => {
-                            const row = document.createElement('tr');
-                            row.innerHTML = `
-                                <td class="p-3 border-b border-gray-200">${g.size}</td>
-                                <td class="p-3 border-b border-gray-200">${g.minHours.toLocaleString()} - ${g.maxHours.toLocaleString()}</td>
-                                <td class="p-3 border-b border-gray-200">${g.days}</td>
-                            `;
-                            guidelinesTableBody.appendChild(row);
-                        });
-                    }
-
-                    lastUpdatedElement.textContent = "Guidelines loaded successfully.";
-
-                } catch (error) {
-                    console.error('Failed to load guidelines:', error);
-                    lastUpdatedElement.textContent = `Error: Could not load guideline data.`;
-                }
             }
 
             function formatDate(date) {
@@ -653,7 +665,7 @@
                 discussionNote.style.display = 'none';
                 activeReviewDays = null;
 
-                if (isNaN(hours) || hours <= 0) {
+                if (isNaN(hours) || hours < 0) {
                     projectSizeResult.textContent = ''; 
                     reviewTimeResult.textContent = ''; 
                     qaqcDaysResult.textContent = '';
@@ -662,22 +674,18 @@
                 }
 
                 currentCalculatedSize = getHardCodedSize(hours);
-                const guideline = guidelines.find(g => hours >= g.minHours && hours <= g.maxHours);
+                const guideline = hardcodedGuidelines.find(g => hours >= g.min && hours <= g.max);
 
                 if (guideline) {
                     activeReviewDays = guideline.days;
                     projectSizeResult.textContent = guideline.size; 
-                    const weeks = guideline.days / 7;
-                    reviewTimeResult.innerHTML = `<span class="block text-2xl">${weeks.toFixed(1)} Weeks</span>`;
+                    reviewTimeResult.innerHTML = `<span class="block text-2xl">${guideline.text}</span>`;
                     qaqcDaysResult.textContent = `${guideline.days} Days`;
                     
-                    if (hours > 10001 || guideline.days >= 84) {
-                         discussionNote.textContent = 'Projects > 10,001 Hours or 12+ Weeks require discussion.';
+                    if (hours > 10001 || guideline.days >= 63) {
+                         discussionNote.textContent = 'Projects > 10,001 Hours (3XL+) require discussion.';
                          discussionNote.style.display = 'block';
                     }
-                } else if (currentCalculatedSize) {
-                    projectSizeResult.textContent = `Size ${currentCalculatedSize}`;
-                    reviewTimeResult.textContent = "See Matrix";
                 } else {
                     projectSizeResult.textContent = 'N/A';
                     reviewTimeResult.textContent = 'N/A';
@@ -687,6 +695,7 @@
             // --- SCORING LOGIC ---
             function calculateScore() {
                 const hours = parseInt(engineeringHoursInput.value, 10);
+                const durationGiven = parseInt(durationGivenInput.value, 10);
                 const hErrors = parseInt(errorsH.value, 10) || 0;
                 const mErrors = parseInt(errorsM.value, 10) || 0;
                 const lErrors = parseInt(errorsL.value, 10) || 0;
@@ -694,34 +703,62 @@
                 checkTPP();
 
                 if (isNaN(hours)) {
-                    finalScoreResult.textContent = "-";
+                    finalQualityScoreResult.textContent = "-";
+                    finalDurationScoreResult.textContent = "-";
                     scoreReason.textContent = "Please enter Project Design Hours first.";
                     return;
                 }
 
                 const size = getHardCodedSize(hours);
                 if (!size) {
-                    finalScoreResult.textContent = "N/A";
+                    finalQualityScoreResult.textContent = "N/A";
+                    finalDurationScoreResult.textContent = "N/A";
                     scoreReason.textContent = "Hours out of range.";
                     return;
                 }
 
+                // 1. Quality Grade (Errors)
                 const criteria = scoringCriteria[size].scores;
-                
                 let hScore = 1, mScore = 1, lScore = 1;
 
                 for (let s = 5; s >= 2; s--) { if (hErrors <= criteria[s].h) { hScore = s; break; } }
                 for (let s = 5; s >= 2; s--) { if (mErrors <= criteria[s].m) { mScore = s; break; } }
                 for (let s = 5; s >= 2; s--) { if (lErrors <= criteria[s].l) { lScore = s; break; } }
 
-                let finalScore = Math.min(hScore, mScore, lScore);
+                let finalQualityScore = Math.min(hScore, mScore, lScore);
+                finalQualityScoreResult.className = `text-4xl font-bold score-${finalQualityScore}`;
+                finalQualityScoreResult.textContent = finalQualityScore;
 
-                finalScoreResult.className = `text-4xl font-bold score-${finalScore}`;
-                finalScoreResult.textContent = finalScore;
+                // 2. Duration Grade
+                let dScoreOutput = "-";
+                let durationReasonText = "(Enter duration to see Duration Grade)";
+
+                if (!isNaN(durationGiven)) {
+                    if (['2XL', '3XL', '4XL'].includes(size)) {
+                        dScoreOutput = durationGiven >= 84 ? "Pass" : "Fail";
+                        finalDurationScoreResult.className = `text-4xl font-bold ${durationGiven >= 84 ? 'text-green-600' : 'text-red-600'}`;
+                        durationReasonText = `(Duration: ${durationGiven} days - needs 84+)`;
+                    } else {
+                        const dMatrix = durationScoring[size];
+                        let dScore = 1;
+                        if (durationGiven >= dMatrix[5]) dScore = 5;
+                        else if (durationGiven >= dMatrix[4]) dScore = 4;
+                        else if (durationGiven >= dMatrix[3]) dScore = 3;
+                        else if (durationGiven >= dMatrix[2]) dScore = 2;
+                        
+                        dScoreOutput = dScore;
+                        finalDurationScoreResult.className = `text-4xl font-bold score-${dScore}`;
+                        durationReasonText = `(Duration: ${durationGiven} days = Score ${dScore})`;
+                    }
+                } else {
+                    finalDurationScoreResult.className = `text-4xl font-bold text-gray-400`;
+                }
+                finalDurationScoreResult.textContent = dScoreOutput;
                 
                 scoreReason.innerHTML = `
                     Based on Size <strong>${size}</strong> ${isTPPActive ? '(TPP Active)' : '(Standard)'}:<br>
-                    High: Score ${hScore} | Medium: Score ${mScore} | Low: Score ${lScore}
+                    Errors => High:${hScore} | Med:${mScore} | Low:${lScore} <br>
+                    ${durationReasonText}
                 `;
             }
 
@@ -775,7 +812,6 @@
                 submitByDateResult.textContent = formatDate(submitByDate);
             });
             
-            fetchGuidelines();
             setupCollapsibles();
         });
     </script>
