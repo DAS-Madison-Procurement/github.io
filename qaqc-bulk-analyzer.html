@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QAQC Bulk Schedule Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display.swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .calculator-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-brand { background-color: #005a9e; color: white; }
+        .btn-brand:hover { background-color: #004a83; }
+        .text-brand { color: #005a9e; }
+        .focus-brand:focus { --tw-ring-color: #005a9e; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { background-color: #f3f4f6; padding: 0.75rem; text-align: left; font-size: 0.875rem; font-weight: 600; color: #4b5563; border-bottom: 1px solid #e5e7eb; }
+        td { padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .badge-green { background-color: #dcfce7; color: #166534; }
+        .badge-blue { background-color: #dbeafe; color: #1e40af; }
+        .badge-yellow { background-color: #fef08a; color: #854d0e; }
+        .badge-red { background-color: #fee2e2; color: #991b1b; }
+        .badge-gray { background-color: #f3f4f6; color: #4b5563; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-4 md:p-8">
+
+    <div class="w-full max-w-6xl mx-auto space-y-6">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">QAQC Bulk Schedule Analyzer</h1>
+                <p class="text-gray-600 mt-1">Paste schedule data from SQL Server or Excel to audit durations.</p>
+            </div>
+            <a href="index.html" class="inline-block bg-white text-gray-700 border border-gray-300 font-medium py-2 px-4 rounded-lg hover:bg-gray-50 transition shadow-sm">
+                &larr; Back to Single Calculator
+            </a>
+        </div>
+
+        <!-- Input Area -->
+        <div class="calculator-card p-6">
+            <div class="mb-4">
+                <label for="data-input" class="block text-sm font-bold text-gray-700 mb-2">
+                    Paste Data (Copy with Headers from SQL Grid or Excel)
+                </label>
+                <textarea id="data-input" rows="8" placeholder="Project Number&#9;Project Name&#9;...&#9;Hours&#9;...&#9;Duration&#10;21ETF0256A&#9;Whippany SS 230kV...&#9;...&#9;2280&#9;...&#9;43" class="w-full p-4 border border-gray-300 rounded-lg font-mono text-xs text-gray-600 focus:ring-2 focus-brand whitespace-pre overflow-x-auto"></textarea>
+            </div>
+            <div class="flex gap-4">
+                <button id="analyze-btn" class="flex-1 btn-brand font-semibold py-3 px-4 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus-brand transition">
+                    Analyze Schedules
+                </button>
+                <button id="clear-btn" class="bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-300 transition focus:outline-none">
+                    Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Summary -->
+        <div id="results-summary" class="grid grid-cols-2 md:grid-cols-4 gap-4 hidden">
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 text-center">
+                <p class="text-sm text-gray-500 font-medium">Total Audited</p>
+                <p id="count-total" class="text-3xl font-bold text-gray-800">-</p>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg shadow-sm border border-green-200 text-center">
+                <p class="text-sm text-green-700 font-medium">Perfect (Score 5)</p>
+                <p id="count-perfect" class="text-3xl font-bold text-green-700">-</p>
+            </div>
+            <div class="bg-yellow-50 p-4 rounded-lg shadow-sm border border-yellow-200 text-center">
+                <p class="text-sm text-yellow-700 font-medium">Acceptable (Score 3-4)</p>
+                <p id="count-acceptable" class="text-3xl font-bold text-yellow-700">-</p>
+            </div>
+            <div class="bg-red-50 p-4 rounded-lg shadow-sm border border-red-200 text-center">
+                <p class="text-sm text-red-700 font-medium">Failing (Score 1-2)</p>
+                <p id="count-failing" class="text-3xl font-bold text-red-700">-</p>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        <div id="results-container" class="calculator-card hidden">
+            <div class="overflow-x-auto">
+                <table id="results-table">
+                    <thead>
+                        <tr>
+                            <th>Project</th>
+                            <th>Hours</th>
+                            <th>Size</th>
+                            <th>Actual Given</th>
+                            <th>Needed (Score 5)</th>
+                            <th>Variance to Score 5</th>
+                            <th>Grade</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-body">
+                        <!-- Rows will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DATA MATRICES ---
+        const hardcodedGuidelines = [
+            { size: 'S', min: 0, max: 500, rcNum: 31 },
+            { size: 'M', min: 501, max: 2500, rcNum: 61 },
+            { size: 'L', min: 2501, max: 5000, rcNum: 76 },
+            { size: 'XL', min: 5001, max: 7500, rcNum: 92 },
+            { size: '2XL', min: 7501, max: 10000, rcNum: 84 },
+            { size: '3XL', min: 10001, max: 14999, rcNum: 84 },
+            { size: '4XL', min: 15000, max: 9999999, rcNum: 84 }
+        ];
+
+        const durationScoring = {
+            'S': { 5: 31, 4: 28, 3: 26, 2: 23, 1: 20 },
+            'M': { 5: 61, 4: 56, 3: 52, 2: 48, 1: 44 },
+            'L': { 5: 76, 4: 70, 3: 65, 2: 60, 1: 55 },
+            'XL': { 5: 92, 4: 84, 3: 77, 2: 70, 1: 63 }
+        };
+
+        function getSizeAndTarget(hours) {
+            for (const g of hardcodedGuidelines) {
+                if (hours >= g.min && hours <= g.max) return g;
+            }
+            return null;
+        }
+
+        function calculateScore(size, durationGiven) {
+            if (['2XL', '3XL', '4XL'].includes(size)) {
+                return durationGiven >= 84 ? 5 : 1;
+            }
+            const dMatrix = durationScoring[size];
+            if (durationGiven >= dMatrix[5]) return 5;
+            if (durationGiven >= dMatrix[4]) return 4;
+            if (durationGiven >= dMatrix[3]) return 3;
+            if (durationGiven >= dMatrix[2]) return 2;
+            return 1;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const dataInput = document.getElementById('data-input');
+            const analyzeBtn = document.getElementById('analyze-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const resultsContainer = document.getElementById('results-container');
+            const resultsSummary = document.getElementById('results-summary');
+            const resultsBody = document.getElementById('results-body');
+
+            clearBtn.addEventListener('click', () => {
+                dataInput.value = '';
+                resultsContainer.classList.add('hidden');
+                resultsSummary.classList.add('hidden');
+            });
+
+            analyzeBtn.addEventListener('click', () => {
+                const text = dataInput.value.trim();
+                if (!text) {
+                    alert("Please paste data into the box first.");
+                    return;
+                }
+
+                // Split by rows
+                const rows = text.split('\n');
+                if (rows.length < 2) {
+                    alert("Not enough data found. Make sure to include headers and at least one row of data.");
+                    return;
+                }
+
+                // Determine delimiter (tab vs comma)
+                const delimiter = rows[0].includes('\t') ? '\t' : ',';
+                
+                // Parse headers
+                const headers = rows[0].split(delimiter).map(h => h.trim().toLowerCase());
+                
+                // Find crucial column indexes
+                const idxNum = headers.findIndex(h => h.includes('project number') || h.includes('project id'));
+                const idxName = headers.findIndex(h => h.includes('project name') || h === 'name');
+                const idxHours = headers.findIndex(h => h === 'hours' || h.includes('hrs') || h.includes('design hours'));
+                const idxDuration = headers.findIndex(h => h === 'duration' || h.includes('qaqc duration'));
+
+                if (idxHours === -1 || idxDuration === -1) {
+                    alert("Could not automatically find an 'Hours' or 'Duration' column in your header row. Please check your data format.");
+                    return;
+                }
+
+                resultsBody.innerHTML = '';
+                let countTotal = 0, countPerfect = 0, countAcceptable = 0, countFailing = 0;
+
+                // Process data rows
+                for (let i = 1; i < rows.length; i++) {
+                    if (!rows[i].trim()) continue; // Skip empty rows
+                    
+                    const cols = rows[i].split(delimiter).map(c => c.trim());
+                    
+                    // Fallbacks if columns are missing
+                    const projNum = idxNum !== -1 && cols[idxNum] ? cols[idxNum] : 'Unknown';
+                    const projName = idxName !== -1 && cols[idxName] ? cols[idxName] : '';
+                    const hours = parseFloat(cols[idxHours]);
+                    const duration = parseFloat(cols[idxDuration]);
+
+                    if (isNaN(hours) || isNaN(duration)) continue; // Skip bad data rows
+
+                    countTotal++;
+
+                    const guideline = getSizeAndTarget(hours);
+                    if (!guideline) continue;
+
+                    const targetDuration = guideline.rcNum;
+                    const score = calculateScore(guideline.size, duration);
+                    const gap = duration - targetDuration;
+
+                    // Update Counters
+                    if (score === 5) countPerfect++;
+                    else if (score >= 3) countAcceptable++;
+                    else countFailing++;
+
+                    // Variance & Styling Logic
+                    let gapText = '';
+                    let gapStyle = '';
+                    let badgeClass = 'badge-gray';
+                    let statusText = 'Unknown';
+
+                    if (gap > 0) {
+                        gapText = `${gap} extra days`;
+                        gapStyle = 'text-blue-600 font-bold';
+                        badgeClass = 'badge-blue';
+                        statusText = 'Has Buffer';
+                    } else if (gap < 0) {
+                        gapText = `Needs ${Math.abs(gap)} days`;
+                        gapStyle = 'text-red-600 font-bold';
+                        badgeClass = score >= 3 ? 'badge-yellow' : 'badge-red';
+                        statusText = `Score ${score}`;
+                    } else {
+                        gapText = 'Exact';
+                        gapStyle = 'text-green-600 font-bold';
+                        badgeClass = 'badge-green';
+                        statusText = 'Exact Target';
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.className = score <= 2 ? "bg-red-50" : "";
+                    tr.innerHTML = `
+                        <td>
+                            <div class="font-bold text-gray-800">${projNum}</div>
+                            <div class="text-xs text-gray-500 w-48 truncate" title="${projName}">${projName}</div>
+                        </td>
+                        <td class="font-mono text-gray-600">${hours.toLocaleString()}</td>
+                        <td class="font-bold">${guideline.size}</td>
+                        <td class="font-bold text-gray-800">${duration}</td>
+                        <td class="text-gray-600">${targetDuration}</td>
+                        <td class="${gapStyle}">${gapText}</td>
+                        <td><span class="font-bold text-lg">${score}</span></td>
+                        <td><span class="badge ${badgeClass}">${statusText}</span></td>
+                    `;
+                    resultsBody.appendChild(tr);
+                }
+
+                // Update summary dashboard
+                document.getElementById('count-total').textContent = countTotal;
+                document.getElementById('count-perfect').textContent = countPerfect;
+                document.getElementById('count-acceptable').textContent = countAcceptable;
+                document.getElementById('count-failing').textContent = countFailing;
+
+                resultsSummary.classList.remove('hidden');
+                resultsContainer.classList.remove('hidden');
+            });
+        });
+    </script>
+</body>
+</html>
