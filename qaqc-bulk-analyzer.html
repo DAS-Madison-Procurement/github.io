@@ -106,6 +106,11 @@
                 </div>
                 <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto">
                     <input type="text" id="filter-text" placeholder="Search project, order #..." class="p-2 border border-gray-300 rounded focus:ring-2 focus-brand text-sm w-full md:w-64">
+                    
+                    <select id="filter-engineer" class="p-2 border border-gray-300 rounded focus:ring-2 focus-brand text-sm w-full md:w-48 font-medium text-gray-700">
+                        <option value="All">All Engineers</option>
+                    </select>
+
                     <select id="filter-status" class="p-2 border border-gray-300 rounded focus:ring-2 focus-brand text-sm w-full md:w-48 font-medium text-gray-700">
                         <option value="All">All Statuses</option>
                         <option value="Pass">Pass / Acceptable</option>
@@ -191,11 +196,13 @@
             
             // Filter elements
             const filterText = document.getElementById('filter-text');
+            const filterEngineer = document.getElementById('filter-engineer');
             const filterStatus = document.getElementById('filter-status');
             const noResultsMsg = document.getElementById('no-results-msg');
 
             function applyFilters() {
                 const text = filterText.value.toLowerCase();
+                const engineerFilter = filterEngineer.value;
                 const status = filterStatus.value;
                 const rows = resultsBody.querySelectorAll('tr');
                 let visibleCount = 0;
@@ -203,8 +210,10 @@
                 rows.forEach(row => {
                     const rowText = row.textContent.toLowerCase();
                     const badgeText = row.querySelector('.badge').textContent;
+                    const rowEngineer = row.dataset.lead;
 
                     const matchesText = rowText.includes(text);
+                    const matchesEngineer = engineerFilter === 'All' || rowEngineer === engineerFilter;
                     let matchesStatus = true;
                     
                     if (status === 'Pass') matchesStatus = badgeText.includes('Pass') || badgeText.includes('Exact') || badgeText.includes('Buffer');
@@ -212,7 +221,7 @@
                     else if (status === 'Exact Target') matchesStatus = badgeText.includes('Exact');
                     else if (status === 'Buffer') matchesStatus = badgeText.includes('Buffer');
 
-                    if (matchesText && matchesStatus) {
+                    if (matchesText && matchesStatus && matchesEngineer) {
                         row.style.display = '';
                         visibleCount++;
                     } else {
@@ -224,12 +233,14 @@
             }
 
             filterText.addEventListener('input', applyFilters);
+            filterEngineer.addEventListener('change', applyFilters);
             filterStatus.addEventListener('change', applyFilters);
 
             clearBtn.addEventListener('click', () => {
                 dataInput.value = '';
                 filterText.value = '';
                 filterStatus.value = 'All';
+                filterEngineer.innerHTML = '<option value="All">All Engineers</option>';
                 resultsContainer.classList.add('hidden');
                 resultsSummary.classList.add('hidden');
             });
@@ -258,6 +269,7 @@
                 const idxNum = headers.findIndex(h => h.includes('project number') || h.includes('project id'));
                 const idxName = headers.findIndex(h => h.includes('project name') || h === 'name');
                 const idxOrder = headers.findIndex(h => h.includes('order #') || h.includes('order number'));
+                const idxLead = headers.findIndex(h => h === 'lead' || h.includes('engineer'));
                 const idxHours = headers.findIndex(h => h === 'hours' || h.includes('hrs') || h.includes('design hours'));
                 const idxDuration = headers.findIndex(h => h === 'duration' || h.includes('qaqc duration'));
 
@@ -268,6 +280,9 @@
 
                 resultsBody.innerHTML = '';
                 let countTotal = 0, countPerfect = 0, countAcceptable = 0, countFailing = 0, countExcess = 0;
+                
+                // To track unique engineers for the dropdown
+                const uniqueEngineers = new Set();
 
                 // Process data rows
                 for (let i = 1; i < rows.length; i++) {
@@ -279,6 +294,7 @@
                     const projNum = idxNum !== -1 && cols[idxNum] ? cols[idxNum] : 'Unknown';
                     const projName = idxName !== -1 && cols[idxName] ? cols[idxName] : '';
                     const orderNum = idxOrder !== -1 && cols[idxOrder] ? cols[idxOrder] : '';
+                    const leadName = idxLead !== -1 && cols[idxLead] ? cols[idxLead] : 'Unassigned';
                     
                     const hours = parseFloat(cols[idxHours]);
                     const duration = parseFloat(cols[idxDuration]);
@@ -286,6 +302,7 @@
                     if (isNaN(hours) || isNaN(duration)) continue; // Skip bad data rows
 
                     countTotal++;
+                    uniqueEngineers.add(leadName);
 
                     const guideline = getSizeAndTarget(hours);
                     if (!guideline) continue;
@@ -324,11 +341,13 @@
 
                     const tr = document.createElement('tr');
                     tr.className = score <= 2 ? "bg-red-50 hover:bg-red-100" : "hover:bg-gray-100";
+                    tr.dataset.lead = leadName; // Store engineer data for quick filtering
                     tr.innerHTML = `
                         <td>
                             <div class="font-bold text-gray-800">${projNum}</div>
                             <div class="text-xs text-gray-500 w-48 truncate" title="${projName}">${projName}</div>
                             ${orderNum ? `<div class="text-[10px] text-gray-400 mt-0.5">Order: ${orderNum}</div>` : ''}
+                            ${leadName !== 'Unassigned' ? `<div class="text-[10px] text-brand mt-0.5 font-semibold">Lead: ${leadName}</div>` : ''}
                         </td>
                         <td class="font-mono text-gray-600">${hours.toLocaleString()}</td>
                         <td class="font-bold">${guideline.size}</td>
@@ -339,6 +358,18 @@
                         <td><span class="badge ${badgeClass}">${statusText}</span></td>
                     `;
                     resultsBody.appendChild(tr);
+                }
+
+                // Populate Engineer Filter Dropdown
+                filterEngineer.innerHTML = '<option value="All">All Engineers</option>';
+                const sortedEngineers = Array.from(uniqueEngineers).sort();
+                sortedEngineers.forEach(eng => {
+                    if (eng && eng !== 'Unassigned') {
+                        filterEngineer.innerHTML += `<option value="${eng}">${eng}</option>`;
+                    }
+                });
+                if (uniqueEngineers.has('Unassigned')) {
+                    filterEngineer.innerHTML += `<option value="Unassigned">Unassigned</option>`;
                 }
 
                 // Update summary dashboard
